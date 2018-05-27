@@ -1,8 +1,6 @@
 # vbPET
 Variational Bayesian estimator for Positron Emission Tomography imaging
 
-[![Build Status][travis-image]][travis-url]
-
 This toolbox provides a Variational Bayesian estimator for the quantification of Positron Emission Tomography data. It includes several model used for kinetic modeling. It is based on MATLAB and require the use of Parallel Toolbox to speedup the estimation. Please cite [1] if you use this toolbox in your research.
 
 [1] **M.Castellaro**, G.Rizzo, M.Tonietto, M.Veronese, F.E. Turkheimer, M.A.Chappell and A.Bertoldo “[A Variational Bayesian inference method for parametric imaging of PET data [paper1]”, *NeuroImage, 150:136-149 (2017)*.
@@ -45,8 +43,3 @@ Distributed under the MIT license. See ``LICENSE`` for more information.
 [//]: # (reference links)
 
    [paper1]: <https://www.sciencedirect.com/science/article/pii/S1053811917301143>
-
-<!-- Markdown link & img dfn's -->
-[travis-image]: https://img.shields.io/travis/marcocastellaro/node-datadog-metrics/master.svg?style=flat-square
-[travis-url]: https://travis-ci.org/marcocastellaro/vbPET
-[wiki]: https://github.com/marcocastellaro/vbPET/wiki
