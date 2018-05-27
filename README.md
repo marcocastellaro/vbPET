@@ -1,2 +1,2 @@
 # vbPET
-Variational Bayesian estimatore for Positron Emission Tomography imaging
+Variational Bayesian estimator for Positron Emission Tomography imaging
