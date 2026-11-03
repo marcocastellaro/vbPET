@@ -50,6 +50,7 @@ class Model:
     label: str = ""
     lower: tuple = None
     prior_sd_min: dict = field(default_factory=dict)
+    log_params: tuple = ()  # parameters estimated as log θ (see log_space)
 
     @property
     def lower_bounds(self):
@@ -82,7 +83,8 @@ class Model:
                      tuple(self.p0[i] for i in free),
                      lambda theta, inp, frames: fn(expand(theta), inp, frames), derived,
                      fixed={**self.fixed, **fixed}, label=f"{self.name}[{tag}]",
-                     lower=tuple(lb[i] for i in free), prior_sd_min=self.prior_sd_min)
+                     lower=tuple(lb[i] for i in free), prior_sd_min=self.prior_sd_min,
+                     log_params=tuple(p for p in self.log_params if p not in fixed))
 
     def with_delay(self, lower=-1.0, prior_sd=0.1):
         """Add a blood arrival delay ``delay`` (min, input shifted: C(t - delay)).
@@ -105,6 +107,74 @@ class Model:
                      derived, fixed=self.fixed, label=(self.label or self.name) + "+delay",
                      lower=self.lower_bounds + (float(lower),),
                      prior_sd_min={**self.prior_sd_min, "delay": float(prior_sd)})
+
+    def log_space(self):
+        """Same model with log θ for the parameters bounded at 0 (rates, Vb).
+
+        VB then never hits the bound (no clipping, VT stays finite) and the
+        regional prior becomes log-normal. Other parameters (e.g. ``delay``) stay
+        linear. Use :meth:`prior_to_internal` / :meth:`to_natural` to convert.
+        """
+        if self.log_params:
+            return self
+        lb = self.lower_bounds
+        idx = tuple(i for i, b in enumerate(lb) if b == 0.0)
+        if not idx:
+            return self
+        jidx = jnp.array(idx)
+        fn = self.predict_fn
+
+        def natural(t):
+            return t.at[jidx].set(jnp.exp(t[jidx]))
+
+        derived = {k: (lambda t, f=f: f(natural(t))) for k, f in self.derived.items()}
+        p0 = tuple(float(jnp.log(max(v, 1e-3))) if i in idx else v for i, v in enumerate(self.p0))
+        return Model(self.name, self.param_names, p0,
+                     lambda t, inp, frames: fn(natural(t), inp, frames), derived,
+                     fixed=self.fixed, label=(self.label or self.name) + "[log]",
+                     lower=tuple(-jnp.inf if i in idx else b for i, b in enumerate(lb)),
+                     prior_sd_min=self.prior_sd_min,
+                     log_params=tuple(self.param_names[i] for i in idx))
+
+    def _log_mask(self):
+        import numpy as np
+        return np.array([p in self.log_params for p in self.param_names])
+
+    def prior_to_internal(self, mean, sd, floor_rel=1e-3):
+        """Natural-unit prior (mean, sd) -> internal coordinates.
+
+        Log parameters: log-normal with median = mean and the same coefficient of
+        variation, sd_log = sqrt(log(1 + (sd/mean)^2)). Means at or below 0 (a
+        regional fit at the bound) are floored to ``floor_rel`` x sd.
+        """
+        import numpy as np
+        mean = np.array(mean, float)
+        sd = np.array(sd, float)
+        lm = self._log_mask()
+        if not lm.any():
+            return mean, sd
+        mu = np.maximum(mean[..., lm], np.maximum(floor_rel * sd[..., lm], 1e-12))
+        cv = sd[..., lm] / mu
+        mean[..., lm] = np.log(mu)
+        sd[..., lm] = np.sqrt(np.log1p(cv**2))
+        return mean, sd
+
+    def to_natural(self, m, cov):
+        """Internal posterior (m, cov) -> natural-unit point estimate and sd.
+
+        Log parameters: median exp(m) and the log-normal sd
+        sqrt((exp(v) - 1) exp(2m + v)).
+        """
+        import numpy as np
+        m = np.asarray(m, float)
+        var = np.einsum("...ii->...i", np.asarray(cov, float))
+        est, sd = m.copy(), np.sqrt(np.clip(var, 0, None))
+        lm = self._log_mask()
+        if lm.any():
+            v = np.clip(var[..., lm], 0, 50)
+            est[..., lm] = np.exp(m[..., lm])
+            sd[..., lm] = np.sqrt(np.expm1(v) * np.exp(2 * m[..., lm] + v))
+        return est, sd
 
     def derived_with_var(self, theta, cov):
         """Return {name: (value, variance)} for one parameter vector."""

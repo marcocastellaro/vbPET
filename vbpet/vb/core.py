@@ -101,7 +101,7 @@ def _kernel(z, w2, m0, L0, *, f_orig, opts: VBOptions, lower):
             m_new = jnp.maximum(m_new, lower / D)
         return L, m_new, c_new, s_new
 
-    def free_energy(s, c, m, L, k, J):
+    def free_energy(s, c, m, L, k, J, parts=False):
         _, logdetL = jnp.linalg.slogdet(L)
         _, logdetL0 = jnp.linalg.slogdet(L0u)
         Linv = jnp.linalg.inv(L)
@@ -120,6 +120,8 @@ def _kernel(z, w2, m0, L0, *, f_orig, opts: VBOptions, lower):
             # in original units (r is not scale invariant)
             r = 2.0 / ((m[ard] * D[ard]) ** 2 + 1.0 / (L[ard, ard] / D[ard] ** 2))
             F = F + (-1.5 * (jnp.log(r) + digamma(d)) - d - gammaln(d) - d * jnp.log(r))
+        if parts:
+            return F, logpost - logphi
         return F
 
     def evaluate(u):
@@ -193,8 +195,12 @@ def _vb_final(st, z, w2, m0, L0, **kw):
     D = K["D"]
     DD = D[:, None] * D[None, :]
     m_best = st["bm"] * D
+    # data part of F (expected log likelihood - KL of the noise posterior), needed
+    # for the free energy of the spatial model (vb.spatial)
+    J, k = K["evaluate"](st["bm"])
+    _, F_data = K["free_energy"](st["bs"], st["bc"], st["bm"], st["bL"], k, J, parts=True)
     return dict(m=m_best, cov=jnp.linalg.inv(st["bL"]) * DD, L=st["bL"] / DD,
-                s=st["bs"], c=st["bc"], F=st["bF"], n_iter=st["count"],
+                s=st["bs"], c=st["bc"], F=st["bF"], F_data=F_data, n_iter=st["count"],
                 fit=K["f"](st["bm"]))
 
 

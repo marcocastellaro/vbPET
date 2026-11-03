@@ -98,3 +98,25 @@ def test_bids_app_srtm_reference_region(tmp_path):
     assert abs((1 + kin.loc["high", "BPnd"]) / dvr - 1) < 0.15
     bp = nib.load(d / "sub-01_model-SRTM_meas-BPnd_mimap.nii.gz").get_fdata()
     assert np.isfinite(bp).sum() > 100
+
+
+def test_bids_app_model_selection(tmp_path):
+    rng = np.random.default_rng(2)
+    bids = tmp_path / "bids"
+    make_dataset(bids, rng)
+    out = tmp_path / "out"
+    rc = main([str(bids), str(out), "participant", "--model", "1TCM,2TCM", "--device", "cpu",
+               "--derivatives", str(bids / "derivatives" / "seg"), "--dseg-desc", "test",
+               "--chunk-size", "64"])
+    assert rc == 0
+    d = out / "sub-01" / "pet"
+    best = nib.load(d / "sub-01_model-selection_meas-BestModel_mimap.nii.gz").get_fdata()
+    p2 = nib.load(d / "sub-01_model-selection_meas-P2TCM_mimap.nii.gz").get_fdata()
+    seg = nib.load(bids / "derivatives/seg/sub-01/pet/sub-01_space-pet_seg-test_dseg.nii.gz").get_fdata()
+    # data are 2TCM with a clear second compartment in label 1 ("high")
+    assert np.mean(best[seg == 1] == 2) > 0.8
+    assert np.nanmedian(p2[seg == 1]) > 0.9
+    vt = nib.load(d / "sub-01_model-selection_meas-VT_desc-bma_mimap.nii.gz").get_fdata()
+    assert np.isfinite(vt[seg > 0]).mean() > 0.95
+    tab = pd.read_csv(d / "sub-01_model-selection_desc-regional_kinpar.tsv", sep="\t").set_index("name")
+    assert tab.loc["high", "best_sumF"] == "2TCM"

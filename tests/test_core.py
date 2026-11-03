@@ -158,3 +158,49 @@ def test_delay_recovered_by_wnlls_and_vb():
     zn = np.asarray(model.predict(jnp.asarray(neg), inp, fr))
     rn = wnlls(model, inp, fr, zn, np.ones_like(zn))
     assert rn["par"][-1] < -0.1  # negative delays allowed
+
+
+def test_log_space_roundtrip_and_no_zero_rates():
+    prob = make_problem("2TCM", n_vox=64, seed=8)
+    nat = prob["model"]
+    lm = nat.log_space()
+    assert lm.log_params == ("K1", "k2", "k3", "k4", "Vb")
+    assert all(b == -np.inf for b in lm.lower_bounds)
+    mean, sd = np.array([0.1, 0.2, 0.05, 0.0, 0.05]), np.array([0.05, 0.1, 0.02, 0.01, 0.02])
+    m_i, sd_i = lm.prior_to_internal(mean, sd)
+    assert np.all(np.isfinite(m_i)) and np.all(sd_i > 0)
+    est, _ = lm.to_natural(m_i, np.diag(sd_i**2))
+    np.testing.assert_allclose(est[[0, 1, 2, 4]], mean[[0, 1, 2, 4]], rtol=1e-12)
+    th = jnp.array([0.1, 0.2, 0.05, 0.03, 0.05])
+    np.testing.assert_allclose(np.asarray(lm.predict(jnp.log(th), prob["inp"], prob["frames"])),
+                               np.asarray(nat.predict(th, prob["inp"], prob["frames"])), rtol=1e-12)
+    # k4 prior centred near 0: linear VB clips k4 to 0 in many voxels, log VB never does
+    m0, s0 = np.array(prob["p_true"]), 0.5 * np.array(prob["p_true"])
+    m0[3], s0[3] = 0.002, 0.01
+    w2 = prob["weights"] ** 2
+    rl = fit_vb(nat, prob["inp"], prob["frames"], prob["Z"], w2, m0, np.diag(1 / s0**2))
+    mi, si = lm.prior_to_internal(m0, s0)
+    rg = fit_vb(lm, prob["inp"], prob["frames"], prob["Z"], w2, mi, np.diag(1 / si**2))
+    vt = lm.derived["VT"]
+    vts = np.array([float(vt(jnp.asarray(m))) for m in rg["m"]])
+    assert np.all(np.isfinite(vts)) and np.all(np.exp(rg["m"][:, 3]) > 0)
+    print("linear VB voxels with k4 clipped to 0:", int(np.sum(rl["m"][:, 3] == 0)))
+
+
+def test_spatial_free_energy_selects_best_sweep():
+    from vbpet.vb.spatial import fit_spatial, neighbours
+    prob = make_problem("1TCM", n_vox=1, seed=9)
+    model, inp, fr = prob["model"], prob["inp"], prob["frames"]
+    nx = 12
+    x, y = np.meshgrid(np.linspace(0, 1, nx), np.linspace(0, 1, nx), indexing="ij")
+    th = np.stack([(0.05 * (1 + 0.3 * np.sin(3 * x) * np.cos(2 * y))).ravel(),
+                   np.full(nx * nx, 0.18), np.full(nx * nx, 0.05)], 1)
+    clean = np.asarray(jax.vmap(lambda t: model.predict(t, inp, fr))(th))
+    sdn = 0.15 * clean.mean(0) + 1e-3
+    Z = np.abs(clean + np.random.default_rng(1).normal(size=clean.shape) * sdn)
+    mu = np.broadcast_to(np.array([0.05, 0.18, 0.05]), th.shape).copy()
+    r = fit_spatial(model, inp, fr, Z, 1 / sdn**2, mu, 0.5 * mu, "SRR",
+                    neighbours(np.arange(nx * nx), (nx, nx, 1)), n_sweeps=10)
+    Fh = r["F_history"]
+    assert 2 <= len(Fh) <= 11 and np.all(np.isfinite(Fh))
+    assert Fh[r["best_sweep"]] == Fh.max() and Fh.max() >= Fh[0]

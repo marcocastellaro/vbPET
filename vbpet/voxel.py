@@ -31,7 +31,7 @@ def voxel_priors(lab, roi_info, priors, model):
 
 def fit_voxels(model, inp, frames, Z, idx, shape3d, m0, sd, W2, roi,
                opts=VBOptions(), chunk_size=8192, dtype=jnp.float64, progress=None,
-               prior_types=None, spatial_sweeps=5, spatial_eps=0.1, spatial_within_roi=False):
+               prior_types=None, spatial_sweeps=10, spatial_eps=0.1, spatial_within_roi=False):
     """VB for voxel TACs ``Z`` (V, T) at flat positions ``idx`` in ``shape3d``.
 
     ``W2`` (V, T) or (T,): inverse data variance (MATLAB: the ROI TAC weights

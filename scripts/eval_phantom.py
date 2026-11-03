@@ -25,6 +25,9 @@ def main():
                 continue
             e = nib.load(est).get_fdata()
             t = nib.load(tru).get_fdata()
+            if p == "delay":  # the IDIF comes from the aorta: delays are relative to it
+                aorta = [i for i, n in names.items() if n == "aorta"]
+                t = t - np.nanmedian(t[np.isin(lab, aorta)])
             for i, n in names.items():
                 m = (lab == i) & np.isfinite(e) & np.isfinite(t)
                 if m.sum() < 5 or n in ("aorta",):
