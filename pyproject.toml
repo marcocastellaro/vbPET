@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vbpet"
+version = "0.1.0.dev0"
+description = "Variational Bayes parametric imaging of dynamic PET (BIDS App), JAX implementation of vbPET"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Marco Castellaro", email = "marco.castellaro@unipd.it" }]
+requires-python = ">=3.10"
+dependencies = [
+    "jax>=0.4.30",
+    "numpy",
+    "scipy",
+    "nibabel",
+    "pandas",
+    "pybids>=0.16",
+]
+
+[project.optional-dependencies]
+cuda = ["jax[cuda12]"]
+test = ["pytest"]
+
+[project.scripts]
+vbpet = "vbpet.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["vbpet*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["matlab: needs a local MATLAB installation"]

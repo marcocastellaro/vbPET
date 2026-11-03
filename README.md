@@ -19,6 +19,24 @@ addpath('vbUtils')
 
 ## Demo
 
+## Python / JAX implementation (work in progress, branch `python-port`)
+
+`vbpet/` is a Python re-implementation of the estimator on JAX (batched over
+voxels, CPU or GPU), packaged as a BIDS App:
+
+```
+pip install -e .            # GPU: pip install -e ".[cuda]"
+vbpet <bids_dir> <output_dir> participant --model 2TCM \
+      --blood-derivative <bids_dir>/derivatives/bloodstream \
+      --derivatives <dseg_derivative_dir> --dseg-desc gtm
+```
+
+Stage 1 fits the regional TACs of a PET-space segmentation (WNLLS) and builds
+region-based priors; stage 2 runs voxel-wise VB with those priors. Outputs are
+BIDS derivatives (`*_kinpar.tsv`, `*_tacs.tsv`, `*_model-<M>_meas-<p>_mimap.nii.gz`).
+See `DESIGN.md` for the design (spatial priors, whole-body PET) and
+`PROVENANCE.md` for the code and data used during development.
+
 ## Release History
 
 * 0.0.1
