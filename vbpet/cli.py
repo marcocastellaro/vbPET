@@ -38,6 +38,9 @@ def build_parser():
     g.add_argument("--fit-delay", action="store_true",
                    help="estimate a blood arrival delay per region/voxel (parameter 'delay', "
                         "min; recommended for whole-body PET)")
+    g.add_argument("--delay-prior-sd", type=float,
+                   help="with --fit-delay: voxel prior sd of the delay (min) around the "
+                        "regional (organ) estimate; 0 = fixed to the regional value")
     g.add_argument("--blood-shift", type=float, default=0.0,
                    help="delay applied to the blood curves (minutes, negative = earlier)")
     g.add_argument("--ref-label", nargs="+",
@@ -74,6 +77,11 @@ def build_parser():
     g.add_argument("--s0", type=float, default=1e6)
     g.add_argument("--c0", type=float, default=50.0)
     g.add_argument("--max-iter", type=int, default=100)
+    g.add_argument("--max-stall", type=int,
+                   help="also stop a voxel after this many iterations without improving its "
+                        "best free energy by more than the tolerance; catches the 2-cycle "
+                        "oscillations seen in 1-20%% of voxels (default 10; 0 = off, which is "
+                        "the --matlab-compat default)")
     g.add_argument("--ard", help="parameter name with ARD prior (e.g. Vb)")
     g.add_argument("--prior-types",
                    help="one letter per (free) parameter: R = regional prior (default), "
@@ -305,6 +313,9 @@ def fit_model(name, ctx, args):
     # --- stage 2 (VB in log space for parameters bounded at 0, unless --param-space linear)
     vbm = model.log_space() if ctx["space"] == "log" else model
     sel, m0, sd, roi = voxel_priors(ctx["lab_all"], ctx["roi_info"], priors, model)
+    if args.delay_prior_sd is not None and "delay" in vbm.param_names:
+        # organ-level delay from stage 1, voxels only allowed small deviations
+        sd[:, vbm.param_names.index("delay")] = max(args.delay_prior_sd, 1e-4)
     m0, sd = vbm.prior_to_internal(m0, sd)
     idx, Z = ctx["idx_all"][sel], ctx["X"][sel]
     if args.max_voxels:
@@ -312,7 +323,10 @@ def fit_model(name, ctx, args):
     wmat = np.stack([weights[n].to_numpy() for n in priors["name"]])  # prior rows -> weights
     W2 = (wmat[roi] ** 2).astype(np.float32)
     ard = vbm.param_names.index(args.ard) if args.ard else -1
-    opts = VBOptions(s0=args.s0, c0=args.c0, max_iter=args.max_iter, ard=ard)
+    if args.max_stall is None:
+        args.max_stall = 0 if args.matlab_compat else 10
+    opts = VBOptions(s0=args.s0, c0=args.c0, max_iter=args.max_iter, ard=ard,
+                     max_stall=args.max_stall)
     dtype = jnp.float32 if args.precision == "float32" else jnp.float64
     t0 = time.perf_counter()
     last = [0.0]
@@ -330,6 +344,8 @@ def fit_model(name, ctx, args):
 
     meta = {**common, "PriorLambda": args.prior_lambda, "s0": args.s0, "c0": args.c0,
             "ARD": args.ard, "Precision": args.precision, "LogParameters": list(vbm.log_params),
+            "MaxIter": args.max_iter, "MaxStall": args.max_stall,
+            "DelayPriorSD": args.delay_prior_sd,
             "PriorTypes": args.prior_types or "R" * vbm.n_params,
             **({"SpatialPrecision": {p: float(v) for p, v in zip(vbm.param_names, res["phi"])
                                      if np.isfinite(v)},
@@ -356,6 +372,16 @@ def fit_model(name, ctx, args):
     w.nifti(to_volume(1 / np.sqrt(res["s"] * res["c"]), idx, shape), ref, tag, "meas-NoiseSD",
             meta={**meta, "Description": "sqrt(1/E[noise precision]), weighted units"})
     w.nifti(to_volume(res["n_iter"], idx, shape), ref, tag, "meas-NIter", meta=meta)
+    w.nifti(to_volume(res["stop"], idx, shape, fill=0), ref, tag, "meas-StopReason",
+            meta={**meta, "Description": "1 converged (|dF| < tol), 2 no increase for "
+                  "max_trials iterations, 3 stall (no improvement of the best F for "
+                  "max_stall iterations), 4 iteration limit"})
+    w.nifti(to_volume(res["flips"], idx, shape, fill=0), ref, tag, "meas-Oscillations",
+            meta={**meta, "Description": "number of sign changes of dF between iterations"})
+    reasons = {k: int(np.sum(res["stop"] == v)) for k, v in
+               [("converged", 1), ("trials", 2), ("stall", 3), ("max_iter", 4)]}
+    log.info("stop reasons: %s; iterations p50/p90/p99 = %s", reasons,
+             np.percentile(res["n_iter"], [50, 90, 99]).astype(int).tolist())
     flags = qc_flags(res, vbm, args.max_iter)
     counts = {"AtLowerBound": int(np.sum(flags & QC_AT_BOUND > 0)),
               "MaxIterReached": int(np.sum(flags & QC_MAX_ITER > 0)),
@@ -382,6 +408,7 @@ def select_models(results, ctx, args):
     import numpy as np
     import pandas as pd
 
+    from .selection import rfx_bms
     from .voxel import to_volume
 
     w, shape = ctx["w"], ctx["shape"]
@@ -397,7 +424,10 @@ def select_models(results, ctx, args):
     post /= post.sum(1, keepdims=True)
     best = np.argmax(F, 1)
     meta = dict(ctx["base_meta"], Models=names, ModelIndex={i + 1: n for i, n in enumerate(names)},
-                Method="voxel-wise Bayesian model selection, p(m|y) ∝ exp(F_m), equal priors")
+                Method="voxel-wise Bayesian model selection, p(m|y) ∝ exp(F_m), equal priors",
+                RegionalMethod="per ROI: summed F (fixed effects) and random-effects BMS over "
+                               "voxels (Stephan 2009; protected exceedance, Rigoux 2014); "
+                               "voxels are not independent, xp saturate with many voxels")
     ref = results[names[0]]["ref"]
     w.nifti(to_volume(np.where(ok, best + 1, 0), idx, shape, fill=0), ref, "model-selection",
             "meas-BestModel", meta={**meta, "Description": "index of the model with the highest F"})
@@ -430,9 +460,17 @@ def select_models(results, ctx, args):
                 row[f"AIC_{n}"], row[f"BIC_{n}"] = float(kr["aic"]), float(kr["bic"])
             row[f"sumF_{n}"] = float(F[m, i].sum())
             row[f"frac_best_{n}"] = float(np.mean(best[m] == i))
+        bms = rfx_bms(F[m])
+        for i, n in enumerate(names):
+            row[f"rfx_r_{n}"] = float(bms["r"][i])
+            row[f"rfx_xp_{n}"] = float(bms["xp"][i])
+            row[f"rfx_pxp_{n}"] = float(bms["pxp"][i])
+        row["rfx_bor"] = bms["bor"]
+        row["best_rfx"] = names[int(np.argmax(bms["r"]))]
         sumF = np.array([row[f"sumF_{n}"] for n in names])
         row["best_sumF"] = names[int(np.argmax(sumF))]
         row["dF_best_vs_second"] = float(np.sort(sumF)[-1] - np.sort(sumF)[-2])
+        row["mean_dF_per_voxel"] = row["dF_best_vs_second"] / max(int(m.sum()), 1)
         if all(f"AIC_{n}" in row for n in names):
             row["best_AIC"] = names[int(np.argmin([row[f"AIC_{n}"] for n in names]))]
             row["best_BIC"] = names[int(np.argmin([row[f"BIC_{n}"] for n in names]))]

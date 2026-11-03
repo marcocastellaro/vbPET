@@ -1,0 +1,1992 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Piano IIPD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=IBM+Plex+Sans+Condensed:wght@600&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper: #f5f6f4; --surface: #ffffff; --ink: #1a2128; --muted: #5b6670;
+  --line: #d8ddd9; --accent: #0d6b72; --accent-soft: #e2f0ef;
+  --ok: #2f7a3e; --ok-bg: #e5f2e6; --prop: #2f5d9e; --prop-bg: #e6eef9;
+  --check: #8a5a00; --check-bg: #fbf0d9;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", Roboto, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  /* layout: sticky contents rail on the left, one reading column on the right */
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11161a; --surface: #182026; --ink: #e4e9ea; --muted: #9aa6ad;
+    --line: #2c373f; --accent: #5cc3c9; --accent-soft: #163338;
+    --ok: #7fcf8c; --ok-bg: #1a3020; --prop: #8fb4ec; --prop-bg: #1b2a40;
+    --check: #e8c06a; --check-bg: #3a2e14; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11161a; --surface: #182026; --ink: #e4e9ea; --muted: #9aa6ad;
+  --line: #2c373f; --accent: #5cc3c9; --accent-soft: #163338;
+  --ok: #7fcf8c; --ok-bg: #1a3020; --prop: #8fb4ec; --prop-bg: #1b2a40;
+  --check: #e8c06a; --check-bg: #3a2e14; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15.5px/1.6 var(--body); }
+.wrap { display: grid; grid-template-columns: 270px minmax(0, 1fr); gap: 40px;
+        max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+nav { position: sticky; top: 0; align-self: start; max-height: 100vh; overflow-y: auto;
+      padding: 28px 0 40px; font-size: 13px; }
+nav .nt { font: 600 12px var(--display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+nav ol { list-style: none; margin: 0; padding: 0; }
+nav li.l2 { margin-top: 8px; font-weight: 600; }
+nav li.l3 { padding-left: 12px; }
+nav a { color: var(--ink); text-decoration: none; display: block; padding: 2px 6px; border-radius: 4px; }
+nav li.l3 a { color: var(--muted); }
+nav a:hover, nav a:focus-visible { background: var(--accent-soft); color: var(--accent); outline: none; }
+main { padding: 28px 0 80px; min-width: 0; }
+header.top { border-bottom: 2px solid var(--accent); padding-bottom: 16px; margin-bottom: 24px; }
+header.top .eyebrow { font: 600 12px var(--display); letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+h1 { font: 600 38px/1.15 var(--display); margin: 6px 0 8px; text-wrap: balance; }
+header.top p { margin: 0; color: var(--muted); max-width: 70ch; }
+h2 { font: 600 27px/1.25 var(--display); margin: 56px 0 12px; padding-top: 12px; border-top: 1px solid var(--line); text-wrap: balance; scroll-margin-top: 12px; }
+h3 { font: 600 20px/1.3 var(--display); margin: 32px 0 8px; scroll-margin-top: 12px; }
+h4 { font: 600 17px/1.3 var(--display); margin: 28px 0 6px; color: var(--accent); scroll-margin-top: 12px; }
+main > p, main > ul, main > ol, main li, blockquote p { max-width: 78ch; }
+a { color: var(--accent); }
+code { font: 0.86em var(--mono); background: var(--accent-soft); padding: 1px 4px; border-radius: 3px; overflow-wrap: anywhere; }
+pre { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+pre code { background: none; padding: 0; overflow-wrap: normal; }
+.tw { overflow-x: auto; margin: 14px 0 18px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; vertical-align: top; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+th { font: 600 13px var(--display); letter-spacing: .02em; background: var(--accent-soft); color: var(--ink); }
+tr:last-child td { border-bottom: none; }
+td code { white-space: normal; }
+blockquote { margin: 14px 0; padding: 4px 18px; border-left: 3px solid var(--accent); background: var(--surface); border-radius: 0 6px 6px 0; }
+blockquote p { margin: 10px 0; }
+blockquote strong:first-child { color: var(--accent); }
+hr { border: none; }
+del { color: var(--muted); }
+.tag { display: inline-block; font: 600 11px/1.5 var(--display); letter-spacing: .05em; padding: 0 7px; border-radius: 10px; vertical-align: 1px; white-space: nowrap; }
+.tag.ok { color: var(--ok); background: var(--ok-bg); }
+.tag.prop { color: var(--prop); background: var(--prop-bg); }
+.tag.check { color: var(--check); background: var(--check-bg); }
+.summary { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 8px 0 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 18px; }
+.card.open { border-left: 4px solid var(--check); }
+.card.wide { grid-column: 1 / -1; }
+.card h3 { margin: 0 0 6px; font-size: 16px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.card ul { margin: 0; padding-left: 18px; }
+.card li { margin: 4px 0; }
+.ms { list-style: none; padding: 0; margin: 6px 0 10px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.ms li { border-top: 3px solid var(--accent); padding: 6px 4px 0; font-size: 13px; line-height: 1.35; }
+.ms b { display: block; font: 600 15px var(--display); color: var(--accent); }
+.legend { margin: 6px 0 0; font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+figure.diagram { margin: 18px 0; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; color: var(--ink); }
+figure.diagram svg { width: 100%; min-width: 640px; height: auto; display: block; font-family: var(--body); }
+figure.diagram .llm { stroke: var(--prop); stroke-width: 2; }
+figure.diagram .engine { stroke: var(--accent); stroke-width: 2; }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 10px; max-width: 78ch; }
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: 1fr; gap: 0; }
+  nav { position: static; max-height: none; border-bottom: 1px solid var(--line); padding-bottom: 16px; }
+  .summary { grid-template-columns: 1fr; }
+  .ms { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  h1 { font-size: 30px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav aria-label="Indice"><div class="nt">Indice</div><ol><li class="l2"><a href="#0-decisioni-prese-2026-11-03-e-loro-impatto">0. Decisioni prese (2026-11-03) e loro impatto</a></li><li class="l3"><a href="#01-cosa-cambia-con-il-whole-body">0.1 Cosa cambia con il whole-body</a></li><li class="l3"><a href="#02-cosa-cambia-con-il-repository-separato">0.2 Cosa cambia con il repository separato</a></li><li class="l2"><a href="#1-obiettivo-utenti-limiti-duso">1. Obiettivo, utenti, limiti d'uso</a></li><li class="l3"><a href="#11-obiettivo">1.1 Obiettivo</a></li><li class="l3"><a href="#12-utenti">1.2 Utenti</a></li><li class="l3"><a href="#13-limiti-duso-da-dichiarare-nel-software-e-nei-report">1.3 Limiti d'uso (da dichiarare nel software e nei report)</a></li><li class="l2"><a href="#2-inventario-del-progetto-esistente-vbpet">2. Inventario del progetto esistente (vbpet)</a></li><li class="l3"><a href="#21-componenti-riutilizzabili">2.1 Componenti riutilizzabili</a></li><li class="l3"><a href="#22-cosa-manca-per-iipd">2.2 Cosa manca per IIPD</a></li><li class="l3"><a href="#23-assunzioni-implicite-nel-codice-attuale-che-iipd-deve-rendere-esplicite">2.3 Assunzioni implicite nel codice attuale che IIPD deve rendere esplicite</a></li><li class="l3"><a href="#24-ipotesi-da-verificare-sul-riuso">2.4 Ipotesi da verificare sul riuso</a></li><li class="l2"><a href="#3-workflow-scientifico">3. Workflow scientifico</a></li><li class="l3"><a href="#31-panoramica">3.1 Panoramica</a></li><li class="l3"><a href="#32-fasi">3.2 Fasi</a></li><li class="l2"><a href="#4-contratti-dati-e-interfacce-proposte">4. Contratti dati e interfacce proposte</a></li><li class="l3"><a href="#41-dataset">4.1 Dataset</a></li><li class="l3"><a href="#42-registro-dei-modelli">4.2 Registro dei modelli</a></li><li class="l3"><a href="#43-direttive">4.3 Direttive</a></li><li class="l3"><a href="#44-piano-fit-valutazioni-report">4.4 Piano, fit, valutazioni, report</a></li><li class="l2"><a href="#5-architettura">5. Architettura</a></li><li class="l3"><a href="#51-moduli">5.1 Moduli</a></li><li class="l3"><a href="#52-riproducibilita-e-tracciamento">5.2 Riproducibilità e tracciamento</a></li><li class="l3"><a href="#53-parallelizzazione">5.3 Parallelizzazione</a></li><li class="l3"><a href="#54-perche-un-planner-deterministico-nellmvp">5.4 Perché un planner deterministico nell'MVP</a></li><li class="l2"><a href="#6-interazione-tramite-llm">6. Interazione tramite LLM</a></li><li class="l3"><a href="#61-tre-livelli">6.1 Tre livelli</a></li><li class="l3"><a href="#62-direttive-dinamiche-versioni-conflitti-invalidazione">6.2 Direttive dinamiche: versioni, conflitti, invalidazione</a></li><li class="l3"><a href="#63-niente-valori-inventati">6.3 Niente valori inventati</a></li><li class="l3"><a href="#64-esempio-1-utente-non-esperto-illustrativo-numeri-fittizi">6.4 Esempio 1 — utente non esperto (illustrativo, numeri fittizi)</a></li><li class="l3"><a href="#65-esempio-2-utente-esperto-illustrativo-numeri-fittizi">6.5 Esempio 2 — utente esperto (illustrativo, numeri fittizi)</a></li><li class="l2"><a href="#7-mvp">7. MVP</a></li><li class="l3"><a href="#71-inclusioni-motivate">7.1 Inclusioni (motivate)</a></li><li class="l3"><a href="#72-esclusioni-motivate">7.2 Esclusioni (motivate)</a></li><li class="l2"><a href="#8-roadmap-e-validazione">8. Roadmap e validazione</a></li><li class="l3"><a href="#81-milestone">8.1 Milestone</a></li><li class="l3"><a href="#82-piano-di-validazione">8.2 Piano di validazione</a></li><li class="l3"><a href="#83-metriche">8.3 Metriche</a></li><li class="l3"><a href="#84-baseline">8.4 Baseline</a></li><li class="l2"><a href="#9-rischi-decisioni-aperte-domande-bloccanti">9. Rischi, decisioni aperte, domande bloccanti</a></li><li class="l3"><a href="#91-rischi">9.1 Rischi</a></li><li class="l3"><a href="#92-decisioni-reversibili-prese-con-unassunzione">9.2 Decisioni reversibili prese con un'assunzione</a></li><li class="l3"><a href="#93-domande-bloccanti-cambiano-il-piano">9.3 Domande bloccanti (cambiano il piano)</a></li><li class="l3"><a href="#94-punti-ancora-da-approfondire">9.4 Punti ancora da approfondire</a></li><li class="l2"><a href="#10-riferimenti">10. Riferimenti</a></li><li class="l3"><a href="#101-verificati-in-questa-sessione-metadati-da-pubmedeurope-pmc-o-dalla-bibliografia-della-review-di-veronese-et-al-2016">10.1 Verificati in questa sessione (metadati da PubMed/Europe PMC o dalla bibliografia della review di Veronese et al. 2016)</a></li><li class="l3"><a href="#102-non-verificati-in-questa-sessione-da-controllare-prima-delluso">10.2 Non verificati in questa sessione (da controllare prima dell'uso)</a></li></ol></nav>
+<main>
+<header class="top">
+  <div class="eyebrow">Documento di pianificazione · 3 novembre 2026</div>
+  <h1>InteractiveIdentificationPETData (IIPD)</h1>
+  <p>Framework per identificare e fittare modelli cinetici su PET dinamica whole-body, anche per traccianti nuovi, con un assistente LLM come interfaccia e un motore scientifico verificabile basato su <code>vbpet</code>. Solo pianificazione: nessun codice IIPD scritto.</p>
+</header>
+
+<section class="summary" aria-label="Sintesi">
+  <div class="card">
+    <h3>Decisioni prese</h3>
+    <ul>
+      <li><b>D1</b> Ambito: PET dinamica <b>whole-body / total-body</b> (IDIF, delay e dispersione per organo, modelli per organo).</li>
+      <li><b>D2</b> <b>Repository separato</b>; il fitting è ereditato da <code>vbpet</code> (dipendenza fissata a un commit).</li>
+    </ul>
+  </div>
+  <div class="card open">
+    <h3>Domande aperte</h3>
+    <ul>
+      <li><b>B1</b> Quale lavoro di Veronese: SA classica, SAIF, SAKE o multi-scala?</li>
+      <li><b>B4</b> Metadati e risultati possono andare a un'API LLM esterna?</li>
+      <li><b>B5</b> FDG o traccianti nuovi? Dati total-body locali?</li>
+      <li>Hosting del nuovo repository: gitlab.dei o GitHub.</li>
+    </ul>
+  </div>
+  <div class="card wide">
+    <h3>Roadmap</h3>
+    <ol class="ms">
+      <li><b>M0</b><span>Repo, schemi, registro, test su vbpet</span></li>
+      <li><b>M1</b><span>QC, Patlak, Logan, SA</span></li>
+      <li><b>M2</b><span>Fit, incertezza, criteri, dispersione</span></li>
+      <li><b>M3</b><span>Planner, audit, report</span></li>
+      <li><b>M4</b><span>Direttive e LLM</span></li>
+      <li><b>M5</b><span>Cluster e voxel</span></li>
+      <li><b>M6</b><span>Doppio input, SAIF, RS, dati reali</span></li>
+    </ol>
+    <p class="legend">Etichette nel testo:
+      <span class="tag ok">ESISTE</span> già nel codice
+      <span class="tag prop">PROPOSTA</span> da costruire
+      <span class="tag check">DA VERIFICARE</span> ipotesi non controllata</p>
+  </div>
+</section>
+
+<h2 id="0-decisioni-prese-2026-11-03-e-loro-impatto">0. Decisioni prese (2026-11-03) e loro impatto</h2>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Decisione</th>
+<th>Prima</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>D1</strong></td>
+<td>Ambito prioritario: <strong>PET dinamica whole-body / total-body</strong>. Il cervello resta supportato dallo stesso motore, ma non guida l'MVP</td>
+<td>domanda B2</td>
+</tr>
+<tr>
+<td><strong>D2</strong></td>
+<td>IIPD in un <strong>repository separato</strong>; <strong>eredita i metodi di fitting da <code>vbpet</code></strong>, che diventa una dipendenza</td>
+<td>domanda B3</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="01-cosa-cambia-con-il-whole-body">0.1 Cosa cambia con il whole-body</h3>
+<ul>
+<li><strong>Input</strong>: il caso standard è l'<strong>IDIF</strong> da una label vascolare (aorta
+  discendente, ventricolo sinistro) della segmentazione d'organo; il prelievo
+  arterioso è l'eccezione. Il QC dell'input (§3.2-A) si estende a: volume
+  parziale e spillover nella label vascolare, frame precoci abbastanza brevi da
+  campionare il picco, rapporto plasma/sangue, metaboliti (trascurabili per FDG,
+  <strong>sconosciuti</strong> per molti traccianti nuovi → assunzione esplicita e analisi di
+  robustezza). Oggi <code>vbpet</code> usa un rapporto plasma/sangue costante e lo stesso
+  segnale per Cp e Cb (§2.3, punto 5).</li>
+<li><strong>Delay e dispersione per organo</strong>: con un FOV assiale lungo l'arrivo del bolo
+  varia lungo il corpo (Li et al. 2022) e nel polmone conta anche la dispersione
+  (Wang et al. 2023). Il delay esiste già (<code>Model.with_delay</code>); la dispersione
+  manca e <strong>entra nell'MVP</strong> (M2) invece che in M6.</li>
+<li><strong>Insiemi di candidati per organo</strong>: il planner non cerca un modello globale.
+  Ogni organo ha requisiti propri:</li>
+</ul>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Organo / regione</th>
+<th>Particolarità</th>
+<th>Conseguenza</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>fegato</td>
+<td>doppio input (arteria epatica + vena porta); identificabilità studiata da Zuo et al. 2019</td>
+<td>modelli a singolo input fittati con avviso "assunzione violata"; ESA <strong>non applicabile</strong> (input non unico); modello a doppio input prioritario in M6</td>
+</tr>
+<tr>
+<td>polmone</td>
+<td>frazione di aria/tessuto, dispersione</td>
+<td>delay + dispersione, Vb elevato</td>
+</tr>
+<tr>
+<td>miocardio</td>
+<td>spillover dal ventricolo sinistro</td>
+<td>termine di spillover come variante del registro <span class="tag prop">PROPOSTA</span></td>
+</tr>
+<tr>
+<td>reni, vescica, colecisti</td>
+<td>escrezione, attività non compartimentale</td>
+<td>solo descrittivi; marcati "fuori modello", mai usati per conclusioni cinetiche</td>
+</tr>
+<tr>
+<td>muscolo</td>
+<td>5K per FDG (Bertoldo et al. 2001)</td>
+<td>già nel registro</td>
+</tr>
+<tr>
+<td>cervello</td>
+<td>come nel resto del documento</td>
+<td>—</td>
+</tr>
+<tr>
+<td>lesioni</td>
+<td>eterogenee, spesso non segmentate</td>
+<td>livello cluster/voxel (§3.2-F)</td>
+</tr>
+</tbody>
+</table></div>
+<ul>
+<li><strong>Modelli reference-region</strong>: in generale non esiste un organo di riferimento
+  valido nel corpo; restano nel registro ma non sono nel percorso principale
+  dell'MVP.</li>
+<li><strong>Spectral analysis</strong>: valida con un singolo input (anche IDIF) per la maggior
+  parte degli organi, non per il fegato. Con FDG e molti traccianti oncologici
+  irreversibili, <strong>SAIF</strong> diventa più rilevante (domanda B1 ancora aperta).</li>
+<li><strong>Cinetica precoce</strong>: il total-body consente frame precoci molto brevi
+  (Feng et al. 2021); K1 e Vb diventano più identificabili, e i protocolli brevi
+  rendono più frequente il caso "reversibilità non decidibile".</li>
+<li><strong>Segmentazione</strong>: dseg d'organo (TotalSegmentator/MOOSE) ricampionata su
+  griglia PET, come già in <code>vbpet</code>; percorso organo → cluster → voxel naturale.
+  Organi piccoli e bordi: volume parziale e registrazione da segnalare nel QC.</li>
+<li><strong>Dimensioni</strong>: lo stadio voxel resta in <code>vbpet</code> (caricamento a blocchi,
+  <code>load_masked</code>), su DEI.</li>
+</ul>
+<h3 id="02-cosa-cambia-con-il-repository-separato">0.2 Cosa cambia con il repository separato</h3>
+<ul>
+<li><code>iipd</code> è un pacchetto Python che dipende da <code>vbpet</code> installato da git con
+  <strong>commit o tag fissato</strong> (<code>python-port</code> non è ancora in <code>master</code>). In sviluppo:
+  installazione editabile dei due repository affiancati.</li>
+<li>IIPD usa solo una <strong>superficie dichiarata</strong> dell'API di <code>vbpet</code>, coperta da
+  test di integrazione nel repository IIPD:
+  <code>models.get_model</code>, <code>models.base.{Model, Frames, PlasmaInput}</code>, <code>conv</code>,
+  <code>input.make_plasma_input</code>, <code>models.reference.reference_input</code>,
+  <code>regional.{roi_tacs, frame_weights, wnlls, fit_regions, make_priors}</code>,
+  <code>vb.core.{fit_vb, VBOptions}</code>, <code>vb.spatial</code>,
+  <code>voxel.{voxel_priors, fit_voxels, qc_flags}</code>, <code>io.bids</code>, <code>io.derivatives</code>.</li>
+<li>
+<p><strong>Dove vanno le modifiche al fitting</strong>. Ciò che è generico va in <code>vbpet</code>, con
+    PR separate e solo con il tuo consenso, visto che <code>vbpet</code> è in sviluppo
+    attivo:</p>
+<ul>
+<li>bound superiori in <code>Model</code>;</li>
+<li><code>wnlls</code> che restituisce tutti i minimi del multistart e il numero di
+  condizione, invece della sola <code>pinv</code>;</li>
+<li>protezione della divisione in 2TCM1K e 5K;</li>
+<li>LM batch in JAX;</li>
+<li>dispersione accanto al delay;</li>
+<li>Patlak e Logan (Patlak è già previsto in <code>DESIGN.md</code>).</li>
+</ul>
+<p>Ciò che è specifico di IIPD resta in <code>iipd</code>: metadati del registro, metodi
+esplorativi (ESA), valutazione, planner, direttive, store, report, LLM.
+Finché una modifica non è in <code>vbpet</code>, IIPD la <strong>avvolge</strong> (es. un proprio
+ciclo multistart che chiama <code>least_squares</code> sul modello compilato di <code>vbpet</code>),
+senza forkare il codice.
+- Questo documento migra nel nuovo repository in M0. Il nuovo repository avrà
+  il proprio <code>PROVENANCE.md</code> (regola di progetto).</p>
+</li>
+</ul>
+<hr />
+<h2 id="1-obiettivo-utenti-limiti-duso">1. Obiettivo, utenti, limiti d'uso</h2>
+<h3 id="11-obiettivo">1.1 Obiettivo</h3>
+<p>IIPD è un framework per <strong>identificare e fittare modelli di dati PET dinamici</strong>,
+anche per traccianti nuovi o poco caratterizzati, guidato da una conversazione in
+linguaggio naturale. Data una serie di TAC (o un'immagine 4D con segmentazione)
+e le informazioni disponibili su acquisizione, input e tracciante, IIPD:</p>
+<ol>
+<li>verifica che i dati siano utilizzabili e dichiara cosa manca;</li>
+<li>esplora i dati con metodi economici (descrittivi, grafici, spectral analysis);</li>
+<li>sceglie, in modo tracciabile, quali modelli siano <strong>applicabili</strong>;</li>
+<li>li fitta con strategie robuste e quantifica l'incertezza;</li>
+<li>li confronta con criteri espliciti, separando due domande diverse:
+   - <strong>quale modello descrive meglio i dati</strong> (adeguatezza / parsimonia);
+   - <strong>cosa i dati consentono di identificare</strong> (parametri e quantità derivate
+     stimabili con precisione utile, e sotto quali assunzioni);</li>
+<li>scende eventualmente da organo/ROI a cluster e voxel;</li>
+<li>produce un report che dice cosa è supportato, cosa resta ambiguo e cosa
+   servirebbe per decidere.</li>
+</ol>
+<p>Esiti ammessi (non solo "il modello migliore è X"):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Esito</th>
+<th>Esempio</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Un modello preferito, alternative escluse con motivazione</td>
+<td>2TCM preferito; 1TCM escluso per residui strutturati in tutte le ROI</td>
+</tr>
+<tr>
+<td>Insieme di modelli indistinguibili, stima di interesse robusta</td>
+<td>2TCM e irr2TCM indistinguibili su 60 min, ma Ki concorda entro il 4%</td>
+</tr>
+<tr>
+<td>Insieme indistinguibile, stima di interesse <strong>non</strong> robusta</td>
+<td>VT dipende dal modello oltre la sua incertezza → serve acquisizione più lunga</td>
+</tr>
+<tr>
+<td>Parametro non identificabile</td>
+<td>k4 con profilo di likelihood piatto; VT identificabile</td>
+</tr>
+<tr>
+<td>Dati insufficienti / informazione mancante</td>
+<td>senza frazione di parent non si può distinguere metabolita in tessuto da legame lento</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="12-utenti">1.2 Utenti</h3>
+<ul>
+<li><strong>Non esperto</strong> (clinico, biologo, chimico che sviluppa il tracciante): sa
+  cosa vuole misurare in termini biologici, non conosce i modelli. Ha bisogno di
+  domande guidate e di spiegazioni.</li>
+<li><strong>Esperto</strong> (modellista PET): vuole controllare modelli, pesi, criteri e
+  soglie, eseguire analisi mirate e ispezionare ogni decisione.</li>
+<li><strong>Sviluppatore / validatore</strong>: usa la modalità esaustiva (<em>audit</em>) per
+  verificare il planner.</li>
+</ul>
+<h3 id="13-limiti-duso-da-dichiarare-nel-software-e-nei-report">1.3 Limiti d'uso (da dichiarare nel software e nei report)</h3>
+<ul>
+<li>Strumento di <strong>ricerca</strong>, non dispositivo medico; nessuna decisione clinica.</li>
+<li>Non sostituisce la validazione di un tracciante (blocking, test-retest,
+  metaboliti, dosimetria): può suggerire quali esperimenti mancano, non
+  surrogarli.</li>
+<li>Una proprietà cinetica stimata (es. "componente irreversibile") <strong>non</strong> è una
+  conclusione biologica (es. "il tracciante è intrappolato nelle cellule
+  tumorali"): IIPD riporta la prima e segnala la distanza dalla seconda.</li>
+<li>Le conclusioni valgono per il protocollo osservato (durata, campionamento,
+  input): IIPD non estrapola oltre.</li>
+<li>Dati di pazienti: l'uso di un LLM esterno è subordinato a una decisione sulla
+  privacy (§9, domanda B4).</li>
+</ul>
+<hr />
+<h2 id="2-inventario-del-progetto-esistente-vbpet">2. Inventario del progetto esistente (<code>vbpet</code>)</h2>
+<p>Fonti lette: <code>DESIGN.md</code>, <code>README.md</code>, <code>PROVENANCE.md</code>, <code>pyproject.toml</code>, tutto
+<code>vbpet/</code>, <code>tests/</code>, <code>scripts/</code>, log dei job in <code>jobs/logs/</code>. Non esiste un
+<code>CLAUDE.md</code> di progetto. Il codice è ~2.5k righe Python/JAX.</p>
+<h3 id="21-componenti-riutilizzabili">2.1 Componenti riutilizzabili</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Componente</th>
+<th>Dove</th>
+<th>Cosa fa</th>
+<th>Uso in IIPD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Interfaccia modello</td>
+<td><code>vbpet/models/base.py:34</code> <code>Model</code></td>
+<td>nome, <code>param_names</code>, <code>p0</code>, <code>predict_fn(theta, inp, frames)</code>, <code>derived</code> (VT, Ki…), <code>lower</code>, <code>prior_sd_min</code></td>
+<td><span class="tag ok">ESISTE</span> nucleo del registro; va arricchito di metadati (§4.2)</td>
+</tr>
+<tr>
+<td>Parametri fissi</td>
+<td><code>base.py:65</code> <code>Model.fix</code></td>
+<td>modello ridotto con parametri bloccati</td>
+<td><span class="tag ok">ESISTE</span> per modelli annidati (k4=0, Vb fisso)</td>
+</tr>
+<tr>
+<td>Ritardo dell'input</td>
+<td><code>base.py:87</code> <code>Model.with_delay</code></td>
+<td>parametro <code>delay</code> (input traslato)</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>Derivati + varianza</td>
+<td><code>base.py:109</code> <code>derived_with_var</code></td>
+<td>delta method con gradienti autodiff</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>Tempi dei frame</td>
+<td><code>base.py:10</code> <code>Frames</code></td>
+<td>start/end/mid</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>Modelli plasma-input</td>
+<td><code>vbpet/models/plasma.py:116</code> <code>_SPECS</code></td>
+<td>1TCM, 2TCM, 2TCM1K, irr2TCM (3K), 1K, 5K, tutti con Vb e sangue intero</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>Modelli reference-region</td>
+<td><code>vbpet/models/reference.py:59</code></td>
+<td>SRTM, SRTM2 (k2' dalla mediana dei fit SRTM, <code>k2p_from_srtm</code> :74)</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>Convoluzione e campionamento</td>
+<td><code>vbpet/conv.py</code></td>
+<td><code>exp_conv</code> rect/linear esatta per input lineare a tratti (:32); <code>sample_frames</code> <code>mid</code> o <strong>media sul frame</strong> (:64)</td>
+<td><span class="tag ok">ESISTE</span>: l'integrazione sulla durata dei frame è già disponibile (<code>mean</code>)</td>
+</tr>
+<tr>
+<td>Input function</td>
+<td><code>vbpet/input.py</code></td>
+<td>griglia uniforme, scala unità, shift (:23)</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>Lettura BIDS-PET</td>
+<td><code>vbpet/io/bids.py</code></td>
+<td>run, tempi frame, unità (<code>unit_factor</code> :26), sangue grezzo e <code>bloodstream</code> (:127, :143), dseg su griglia PET (:205), caricamento mascherato frame per frame (:240)</td>
+<td><span class="tag ok">ESISTE</span> base dell'ingestione</td>
+</tr>
+<tr>
+<td>TAC regionali</td>
+<td><code>vbpet/regional.py:19</code> <code>roi_tacs</code></td>
+<td>media per label</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>Pesi</td>
+<td><code>regional.py:39</code> <code>frame_weights</code></td>
+<td><code>matlab</code> sqrt(Δt/C), <code>duration</code>, <code>uniform</code></td>
+<td><span class="tag ok">ESISTE</span> parziale (§4.3)</td>
+</tr>
+<tr>
+<td>WNLLS multistart</td>
+<td><code>regional.py:62</code> <code>wnlls</code></td>
+<td>scipy <code>least_squares</code> TRF con bound, 5 start con jitter, cov asintotica, WRSS, AIC, BIC</td>
+<td><span class="tag ok">ESISTE</span> base del fitting ROI</td>
+</tr>
+<tr>
+<td>Prior regionali</td>
+<td><code>regional.py:154</code> <code>make_priors</code></td>
+<td>media = stima ROI, sd = λ·media, fallback su ROI con CV alto</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>VB per voxel</td>
+<td><code>vbpet/vb/core.py:224</code> <code>fit_vb</code></td>
+<td>VB linearizzato batch (vmap), output <code>m</code>, <code>cov</code>, <strong>free energy <code>F</code></strong>, rumore <code>s,c</code>, <code>n_iter</code>, fit; ARD opzionale</td>
+<td><span class="tag ok">ESISTE</span> livello voxel</td>
+</tr>
+<tr>
+<td>Prior spaziale</td>
+<td><code>vbpet/vb/spatial.py</code></td>
+<td>MRF sulle deviazioni dalla media regionale, φ appreso, bordi tra ROI tagliabili</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>Stadio voxel + QC</td>
+<td><code>vbpet/voxel.py</code></td>
+<td>prior per voxel (:11), fit (:32), flag QC: parametro al bound, max iter, derivato non finito (:73)</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>Derivati BIDS</td>
+<td><code>vbpet/io/derivatives.py</code> <code>RunWriter</code></td>
+<td>TSV/NIfTI con sidecar JSON (modello, pesi, input, unità)</td>
+<td><span class="tag ok">ESISTE</span> base per la provenienza</td>
+</tr>
+<tr>
+<td>Pipeline</td>
+<td><code>vbpet/cli.py:142</code> <code>process_run</code></td>
+<td>dati → input (sangue/IDIF/reference) → stadio 1 → stadio 2 → derivati</td>
+<td><span class="tag ok">ESISTE</span> un modello per esecuzione</td>
+</tr>
+<tr>
+<td>Test</td>
+<td><code>tests/test_core.py</code>, <code>test_matlab_compat.py</code>, <code>test_bids_app.py</code></td>
+<td>convoluzione vs analitico, recupero parametri senza rumore, float32, prior spaziale, recupero del delay, confronto MATLAB, BIDS end-to-end</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>Generatori sintetici</td>
+<td><code>tests/synthetic.py</code> (input di Feng, framing tipo ds004869); <code>scripts/make_wholebody_phantom.py</code> (fantoccio total-body FDG, delay testa-piedi)</td>
+<td><span class="tag ok">ESISTE</span> ma usano gli <strong>stessi</strong> modelli del fitting (§8.2)</td>
+<td></td>
+</tr>
+<tr>
+<td>Validazione reale</td>
+<td><code>tests/validate_petfit.py</code>, <code>testdata/out/validation/</code></td>
+<td>2TCM regionale vs <code>petfit</code> su ds004869 sub-01: differenza mediana K1 0.6%, VT 0.08% (conv linear, mid)</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+<tr>
+<td>Dati</td>
+<td><code>testdata/ds004869/</code> (sub-01, [11C]MC1, sangue manuale, <code>bloodstream</code>, <code>petprep</code>, <code>petfit</code>); <code>testdata/phantom_wb/</code></td>
+<td><span class="tag ok">ESISTE</span> (solo 1 soggetto per regola di progetto, vedi <code>PROVENANCE.md</code>)</td>
+<td></td>
+</tr>
+<tr>
+<td>Calcolo</td>
+<td><code>jobs/*.sbatch</code>, env su DEI</td>
+<td>esecuzione via SLURM</td>
+<td><span class="tag ok">ESISTE</span></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="22-cosa-manca-per-iipd">2.2 Cosa manca per IIPD</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Mancanza</th>
+<th>Nota</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Metodi grafici (Patlak, Logan, MA1)</td>
+<td><code>DESIGN.md</code> elenca Patlak in <code>plasma.py</code>, ma <strong>non è implementato</strong> (<code>_SPECS</code> non lo contiene)</td>
+</tr>
+<tr>
+<td>Spectral analysis e varianti filtrate</td>
+<td>assente</td>
+</tr>
+<tr>
+<td>Registro con metadati (requisiti di input, ipotesi, stimandi, annidamenti, bound superiori, note di identificabilità)</td>
+<td><code>Model</code> ha solo nomi, p0, bound inferiori</td>
+</tr>
+<tr>
+<td>Bound superiori</td>
+<td><code>wnlls</code> li accetta (<code>upper</code>), ma nessun modello li definisce</td>
+</tr>
+<tr>
+<td>Confronto tra modelli</td>
+<td><code>process_run</code> fitta <strong>un</strong> modello; AIC/BIC calcolati ma mai confrontati</td>
+</tr>
+<tr>
+<td>Diagnostica dei residui, stabilità multistart, profile likelihood, bootstrap</td>
+<td>assenti (il multistart tiene solo il minimo migliore)</td>
+</tr>
+<tr>
+<td>Identificabilità strutturale</td>
+<td>assente</td>
+</tr>
+<tr>
+<td>Contratto dati esplicito, QC dei dati</td>
+<td>caricamento sì, controlli no (vedi assunzioni silenziose sotto)</td>
+</tr>
+<tr>
+<td>Livello cluster/supervoxel</td>
+<td>assente</td>
+</tr>
+<tr>
+<td>Planner, direttive, cache, tracciamento esperimenti, report, LLM</td>
+<td>assenti</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="23-assunzioni-implicite-nel-codice-attuale-che-iipd-deve-rendere-esplicite">2.3 Assunzioni implicite nel codice attuale che IIPD deve rendere esplicite</h3>
+<p>Sono scelte ragionevoli per una BIDS-App, ma in IIPD diventano assunzioni da
+dichiarare e, dove serve, da chiedere all'utente.</p>
+<ol>
+<li><code>load_blood_raw</code> (<code>bids.py:182-189</code>): se manca il
+   plasma usa il sangue intero, se manca il sangue intero usa il plasma, se manca
+   la frazione di parent usa <strong>1</strong> (nessuna correzione metaboliti).</li>
+<li><code>unit_factor</code> (<code>bids.py:26</code>): unità sconosciuta → fattore 1 con solo un warning.</li>
+<li><code>make_plasma_input</code> (<code>input.py:39</code>): oltre l'ultimo campione l'input resta
+   costante all'ultimo valore.</li>
+<li><code>reference_input</code> (<code>reference.py:22</code>): TAC di riferimento interpolata ai
+   mid-frame con C(0)=0.</li>
+<li>IDIF (<code>cli.py:206-211</code>): rapporto plasma/sangue costante (<code>--idif-plasma-ratio</code>),
+   stesso segnale per Cp e Cb, nessuna correzione per partial volume o metaboliti.</li>
+<li>Pesi <code>matlab</code> (<code>regional.py:43</code>): sd ∝ sqrt(C/Δt), con C la TAC <strong>misurata</strong>
+   (pesi dipendenti dai dati; frame con C ≤ 0 scartati).</li>
+<li>Covarianza WNLLS con <code>pinv</code> (<code>regional.py:108</code>): una matrice J'J singolare
+   (sintomo di non identificabilità) produce comunque una covarianza finita.</li>
+<li><code>predict_2tcm1k</code> (<code>plasma.py:61-62</code>, e così <code>predict_5k</code> :91) divide per <code>b1-b2</code> senza la protezione
+   <code>_div</code> usata negli altri modelli. <span class="tag check">DA VERIFICARE</span> comportamento quando
+   b1 = b2.</li>
+<li><code>DESIGN.md</code> §2.2 descrive un LM batch in JAX per lo stadio regionale; il
+   codice usa scipy, sequenziale, su CPU (<code>regional.py:116</code>). Per IIPD (molti
+   modelli × ROI × start × bootstrap) un fitting batch è utile (§5.4).</li>
+</ol>
+<h3 id="24-ipotesi-da-verificare-sul-riuso">2.4 Ipotesi da verificare sul riuso</h3>
+<ul>
+<li><span class="tag check">DA VERIFICARE</span> La free energy <code>F</code> del VB è confrontabile tra modelli solo
+  a parità di dati, pesi e <strong>prior</strong>. In <code>vbpet</code> i prior derivano dal fit
+  regionale dello stesso modello sugli stessi dati (empirical Bayes): <code>F</code> non è
+  quindi una log-evidence "pulita" e il confronto tra modelli tramite <code>F</code> con
+  questi prior è distorto a favore dei modelli più flessibili. Per la selezione
+  a livello voxel servono prior comuni o indipendenti dai dati del soggetto (§4.6).</li>
+<li><span class="tag check">DA VERIFICARE</span> AIC/BIC in <code>wnlls</code> usano <code>nd·log(WRSS/nd)</code>: corretti per
+  il confronto tra modelli fittati sulla <strong>stessa</strong> TAC con gli <strong>stessi</strong> pesi; non
+  includono la correzione AICc per n piccolo (tipicamente 20-40 frame).</li>
+</ul>
+<hr />
+<h2 id="3-workflow-scientifico">3. Workflow scientifico</h2>
+<h3 id="31-panoramica">3.1 Panoramica</h3>
+
+<figure class="diagram">
+<svg viewBox="0 0 910 380" role="img" aria-label="L'LLM parla con l'utente e propone patch alle direttive; il planner deterministico esegue i passi del motore scientifico, i cui risultati vanno nello store; il report legge lo store e l'LLM lo spiega.">
+<defs>
+  <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0 0 L10 5 L0 10 z" fill="currentColor"/>
+  </marker>
+</defs>
+<g fill="none" stroke="currentColor" stroke-width="1.4">
+  <rect x="20" y="30" width="150" height="44" rx="6"/>
+  <rect x="220" y="30" width="200" height="44" rx="6" class="llm"/>
+  <rect x="470" y="30" width="180" height="44" rx="6"/>
+  <rect x="700" y="30" width="180" height="44" rx="6"/>
+  <rect x="20" y="185" width="150" height="50" rx="6"/>
+  <rect x="200" y="150" width="690" height="120" rx="10" class="engine"/>
+  <rect x="215" y="185" width="120" height="50" rx="5"/>
+  <rect x="350" y="185" width="120" height="50" rx="5"/>
+  <rect x="485" y="185" width="120" height="50" rx="5"/>
+  <rect x="620" y="185" width="120" height="50" rx="5"/>
+  <rect x="755" y="185" width="120" height="50" rx="5"/>
+  <rect x="450" y="310" width="200" height="44" rx="6"/>
+</g>
+<g fill="none" stroke="currentColor" stroke-width="1.2">
+  <line x1="172" y1="52" x2="218" y2="52" marker-start="url(#arr)" marker-end="url(#arr)"/>
+  <line x1="420" y1="52" x2="468" y2="52" marker-end="url(#arr)"/>
+  <line x1="650" y1="52" x2="698" y2="52" marker-end="url(#arr)"/>
+  <line x1="335" y1="210" x2="348" y2="210" marker-end="url(#arr)"/>
+  <line x1="470" y1="210" x2="483" y2="210" marker-end="url(#arr)"/>
+  <line x1="605" y1="210" x2="618" y2="210" marker-end="url(#arr)"/>
+  <line x1="740" y1="210" x2="753" y2="210" marker-end="url(#arr)"/>
+  <line x1="815" y1="74" x2="815" y2="148" marker-end="url(#arr)"/>
+  <line x1="550" y1="270" x2="550" y2="308" marker-end="url(#arr)"/>
+  <polyline points="650,332 900,332 900,62 882,62" marker-end="url(#arr)"/>
+  <polyline points="450,332 95,332 95,237" marker-end="url(#arr)"/>
+  <polyline points="95,185 95,128 280,128 280,76" marker-end="url(#arr)"/>
+  <polyline points="740,74 740,106 380,106 380,76" stroke-dasharray="5 4" marker-end="url(#arr)"/>
+</g>
+<g fill="currentColor" font-size="13" text-anchor="middle">
+  <text x="95" y="57">Utente</text>
+  <text x="320" y="50" font-weight="600">LLM</text>
+  <text x="320" y="66" font-size="11">interpreta e spiega</text>
+  <text x="560" y="50" font-weight="600">Direttive</text>
+  <text x="560" y="66" font-size="11">versionate, validate</text>
+  <text x="790" y="50" font-weight="600">Planner</text>
+  <text x="790" y="66" font-size="11">regole deterministiche</text>
+  <text x="95" y="208" font-weight="600">Report</text>
+  <text x="95" y="224" font-size="11">registro evidenze</text>
+  <text x="545" y="170" font-size="11" letter-spacing="0.06em">MOTORE SCIENTIFICO</text>
+  <text x="275" y="207">A. Ingestione</text><text x="275" y="223" font-size="11">e QC</text>
+  <text x="410" y="207">B. Esplorazione</text><text x="410" y="223" font-size="11">Patlak, Logan, SA</text>
+  <text x="545" y="207">C. Fit</text><text x="545" y="223" font-size="11">per organo / ROI</text>
+  <text x="680" y="207">E. Confronto</text><text x="680" y="223" font-size="11">identificabilità</text>
+  <text x="815" y="207">F. Cluster</text><text x="815" y="223" font-size="11">e voxel (vbpet)</text>
+  <text x="550" y="330" font-weight="600">Store</text>
+  <text x="550" y="346" font-size="11">cache, risultati con ID, decisioni</text>
+</g>
+<g fill="currentColor" font-size="11">
+  <text x="195" y="44" text-anchor="middle">chat</text>
+  <text x="445" y="44" text-anchor="middle">patch</text>
+  <text x="822" y="116">passi del piano</text>
+  <text x="557" y="294">risultati</text>
+  <text x="893" y="200" text-anchor="end">stato</text>
+  <text x="270" y="326">dati del report</text>
+  <text x="188" y="122">spiegazione con ID</text>
+  <text x="560" y="100" text-anchor="middle">domanda bloccante</text>
+</g>
+</svg>
+<figcaption>Separazione dei ruoli: l'LLM scrive solo patch alle direttive e legge risultati per ID; ogni calcolo passa dal planner e dal motore, e ogni numero del report viene dallo store.</figcaption>
+</figure>
+
+<p>Regola di separazione: <strong>l'LLM non calcola e non scrive risultati</strong>. Legge
+risultati tramite ID, propone modifiche alle direttive che vengono validate,
+chiede al planner di eseguire passi. Ogni numero nel report proviene dallo store.</p>
+<h3 id="32-fasi">3.2 Fasi</h3>
+<p>Per ogni fase: input, output, controlli, dipendenze, condizioni di arresto.</p>
+<h4 id="a-ingestione-e-controllo-qualita">A. Ingestione e controllo qualità</h4>
+<p><strong>Input</strong>: dataset BIDS-PET (via <code>vbpet.io.bids</code>) oppure tabella di TAC + JSON di
+metadati; direttive iniziali.
+<strong>Output</strong>: <code>DatasetRecord</code> validato (§4.1), <code>QCReport</code>, elenco di <strong>lacune
+informative</strong> con l'effetto di ciascuna sui modelli eleggibili.</p>
+<p>Contratto minimo (<strong>obbligatorio</strong>):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Campo</th>
+<th>Perché</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>tempi di inizio e durata dei frame (s), senza sovrapposizioni</td>
+<td>campionamento del modello, integrazione sul frame</td>
+</tr>
+<tr>
+<td>almeno una TAC (ROI) o immagine 4D + segmentazione su griglia PET</td>
+<td>dati</td>
+</tr>
+<tr>
+<td>unità di attività (o dichiarazione "unità relative")</td>
+<td>coerenza con l'input</td>
+</tr>
+<tr>
+<td>stato della correzione del decadimento (sì/no, tempo di riferimento)</td>
+<td>pesi, coerenza input/tessuto</td>
+</tr>
+<tr>
+<td>radionuclide (emivita)</td>
+<td>pesi da conteggi, correzione del decadimento</td>
+</tr>
+<tr>
+<td>tracciante (nome)</td>
+<td>report; prior di letteratura solo se l'utente li fornisce</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Opzionale</strong>, ma determina quali modelli sono eleggibili:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Informazione</th>
+<th>Abilita</th>
+<th>Se manca</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>plasma arterioso totale + frazione di parent (correzione metaboliti)</td>
+<td>modelli plasma-input, SA, Patlak/Logan con input plasmatico</td>
+<td>solo reference-region o descrittivi; se c'è plasma ma non la frazione di parent, l'assunzione "parent fraction = 1" va <strong>confermata</strong> dall'utente</td>
+</tr>
+<tr>
+<td>sangue intero</td>
+<td>termine Vb·Cb</td>
+<td>si usa il plasma come proxy e lo si dichiara; oppure si chiede il blood-to-plasma ratio</td>
+</tr>
+<tr>
+<td>blood-to-plasma ratio (costante o curva)</td>
+<td>conversione plasma ↔ sangue</td>
+<td>domanda all'utente se servono entrambi</td>
+</tr>
+<tr>
+<td>modello della frazione di parent (es. Hill, esponenziali), con incertezza</td>
+<td>analisi di robustezza all'input (§3.2-E)</td>
+<td>robustezza all'input limitata alla perturbazione delle curve date</td>
+</tr>
+<tr>
+<td>IDIF (label vasale) e correzioni (PVE, rapporto plasma/sangue)</td>
+<td>plasma-input senza prelievi</td>
+<td>dichiarare le assunzioni del punto 5 di §2.3</td>
+</tr>
+<tr>
+<td>regione di riferimento e motivazione (assenza di legame specifico)</td>
+<td>SRTM, SRTM2, RS con riferimento</td>
+<td>i modelli reference-region restano <strong>non eleggibili</strong> finché la validità non è dichiarata</td>
+</tr>
+<tr>
+<td>correzioni applicate (attenuazione, scatter, randoms, decadimento, movimento, PVC)</td>
+<td>interpretazione di residui e QC</td>
+<td>segnalazione; nessun blocco</td>
+</tr>
+<tr>
+<td>dose iniettata, peso</td>
+<td>SUV descrittivo</td>
+<td>nessun SUV</td>
+</tr>
+<tr>
+<td>tempo di iniezione vs inizio acquisizione</td>
+<td>delay, primo frame</td>
+<td>delay stimato o chiesto</td>
+</tr>
+</tbody>
+</table></div>
+<p>Controlli QC (ogni controllo ha un esito <code>ok | warn | fail</code> e un messaggio):</p>
+<ol>
+<li>Frame: monotoni, durate &gt; 0, buchi e sovrapposizioni, durata totale.</li>
+<li>Valori: NaN, infiniti, negativi (quanti, in quali frame), saturazione.</li>
+<li>Unità: fattore noto; coerenza di scala input/tessuto (es. la TAC di una label
+   vascolare, se presente, è confrontabile col sangue intero nella coda; il
+   rapporto VT plausibile non è un controllo di unità e non va usato come tale).</li>
+<li>Decadimento: TAC e input con lo stesso stato di correzione.</li>
+<li>Input: copertura temporale fino a fine scansione (altrimenti la regola di
+   estrapolazione di <code>input.py:39</code> diventa un'assunzione dichiarata), picco ben
+   campionato, frazione di parent monotona e in [0,1], AUC.</li>
+<li>Campionamento: numero di frame durante il picco dell'input; frame iniziali
+   lunghi rispetto al picco → avviso su Vb e delay.</li>
+<li>Rumore: stima per frame (dai residui di uno smoothing, o dalla varianza tra
+   voxel della ROI / n) e SNR per ROI; serve per pesi e per decidere se un
+   metodo esplorativo è applicabile.</li>
+<li>Movimento: se disponibili, parametri di riallineamento (es. dai derivati
+   PETPrep); altrimenti un indicatore grezzo (salti del baricentro dell'attività
+   tra frame consecutivi). Esito solo <code>warn</code>: IIPD non corregge il movimento.</li>
+<li>Delay: ritardo tra salita dell'input e salita delle TAC (rilevante nel
+   total-body).</li>
+</ol>
+<p>Condizioni di arresto: manca un campo obbligatorio → arresto con domanda;
+<code>fail</code> su unità/decadimento → arresto finché l'utente non conferma o corregge.</p>
+<p>Dipendenze: nessuna.</p>
+<h4 id="b-caratterizzazione-preliminare">B. Caratterizzazione preliminare</h4>
+<p>Scopo: <strong>restringere le ipotesi e inizializzare</strong>, non concludere. Ogni metodo
+produce indicatori con il proprio grado di affidabilità; nessun indicatore
+esclude da solo un modello.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Metodo</th>
+<th>Requisiti / ipotesi</th>
+<th>Cosa si ricava</th>
+<th>Rumore e durata</th>
+<th>Costo</th>
+<th>Uso</th>
+<th>Saltare / inconcludente quando</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Descrittivi</strong> (tempo al picco, rapporti precoce/tardivo, pendenza log-lineare tardiva, SUV se disponibile)</td>
+<td>solo TAC</td>
+<td>forma della curva, washout presente o no</td>
+<td>robusti; la pendenza tardiva dipende dalla durata</td>
+<td>trascurabile</td>
+<td>scelta dei test successivi, report per non esperti</td>
+<td>mai saltati; mai usati per escludere</td>
+</tr>
+<tr>
+<td><strong>Patlak</strong> (Patlak et al. 1983)</td>
+<td>input plasmatico; tratto lineare dopo t*</td>
+<td>linearità → componente irreversibile compatibile; Ki</td>
+<td>t<em> da scegliere (analisi di sensibilità su più t</em>); tratto lineare corto con scansioni brevi</td>
+<td>trascurabile</td>
+<td>screening reversibile/irreversibile, Ki iniziale</td>
+<td>input assente; tratto lineare &lt; 3-4 frame; curvatura dipendente da t*</td>
+</tr>
+<tr>
+<td><strong>Logan</strong> (Logan et al. 1990)</td>
+<td>input plasmatico (o riferimento); equilibrio dopo t*</td>
+<td>linearità → reversibilità compatibile; VT</td>
+<td>bias negativo di VT con rumore alto <strong>[DA VERIFICARE: citazione specifica]</strong></td>
+<td>trascurabile</td>
+<td>screening, VT iniziale</td>
+<td>come sopra; a livello voxel solo con cautela</td>
+</tr>
+<tr>
+<td><strong>Spectral analysis (ESA)</strong> (Cunningham &amp; Jones 1993)</td>
+<td>input plasmatico arterioso unico; sistema lineare, tempo-invariante, <strong>non ciclico, a ingresso singolo</strong> (Schmidt 1999)</td>
+<td>spettro cinetico: numero di componenti risolvibili, componente di trapping (β≈0), componente vascolare (β→∞), K1 = Σα, VT = Σα/β (reversibile), Ki</td>
+<td>il rumore crea componenti spurie, soprattutto ai bordi della griglia; la durata limita le β minime risolvibili; scelta della griglia rilevante (Veronese et al. 2016)</td>
+<td>basso: NNLS con una matrice di basi condivisa tra TAC; vettorizzabile</td>
+<td>screening (reversibilità, componenti), inizializzazione (le β mappano agli autovalori del 2TCM), scelta dei modelli candidati</td>
+<td>input assente (solo varianti con riferimento); input multipli (es. fegato a doppio ingresso, metaboliti che entrano nel tessuto); componenti accumulate ai bordi della griglia; spettro instabile al bootstrap o al cambio di griglia</td>
+</tr>
+<tr>
+<td><strong>Rank-shaping (RS)</strong> (Turkheimer et al. 2003)</td>
+<td>come ESA ma senza vincolo di non negatività; ottimizzato per VT di traccianti reversibili; applicabile anche con regione di riferimento</td>
+<td>VT a basso SNR (voxel)</td>
+<td>richiede intervallo di SNR e griglia</td>
+<td>basso-medio</td>
+<td>stima di VT robusta e confronto con i modelli compartimentali</td>
+<td>tracciante non reversibile (da verificare prima)</td>
+</tr>
+<tr>
+<td><strong>SAIF</strong> — SA con filtro iterativo (Veronese et al. 2010; 2012)</td>
+<td>input plasmatico; traccianti <strong>irreversibili</strong>; filtro passa-banda [βL, βU] che separa componenti di trapping e vascolari da quelle di equilibrio</td>
+<td>Ki, K1, Vb a basso SNR, spettro</td>
+<td>le prestazioni dipendono molto dal filtro; va verificato a posteriori che le componenti stimate cadano dentro la banda e non si accumulino agli estremi (Veronese et al. 2016)</td>
+<td>basso-medio</td>
+<td>Ki/K1 voxel-wise per traccianti irreversibili</td>
+<td>reversibilità non esclusa; filtro non giustificabile</td>
+</tr>
+<tr>
+<td><strong>Basis pursuit / DEPICT</strong> (Gunn et al. 2002) e <strong>sparse Bayesian learning</strong> (Peng et al. 2008)</td>
+<td>come ESA, dizionario sovracompleto</td>
+<td>spettro sparso, parametri macro</td>
+<td>dipende dalla regolarizzazione</td>
+<td>basso-medio</td>
+<td>alternativa a ESA per lo screening</td>
+<td>— (non nell'MVP)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Precisazioni metodologiche da riportare all'utente:</p>
+<ul>
+<li>Uno spettro <strong>non</strong> identifica un unico modello compartimentale: modelli
+  diversi possono dare lo stesso spettro (Gunn et al. 2001; Veronese et al. 2016).</li>
+<li>Il numero di componenti in una ROI può riflettere <strong>eterogeneità</strong> tissutale
+  (miscela di tessuti a 1 compartimento) e non un modello a più compartimenti;
+  SA si applica a sistemi eterogenei proprio per la sua forma additiva
+  (Veronese et al. 2016, §4.3). Per questo IIPD confronta lo spettro della ROI
+  con quello dei cluster interni (§3.2-F) prima di trarne indicazioni sul modello.</li>
+<li>SA presuppone un singolo input arterioso: con modelli reference-region il
+  vincolo di non negatività non è soddisfatto (Veronese et al. 2016, §7.2).</li>
+</ul>
+<p><strong>Quale lavoro di Veronese</strong>: ho identificato e verificato la review sulla SA
+(Veronese et al. 2016), SA per la sintesi proteica con leucina (Veronese et al.
+2010), SAIF (Veronese et al. 2012), lo strumento SAKE (Veronese et al. 2013) e i
+lavori sull'approccio gerarchico multi-scala (Rizzo et al. 2012, 2013). Non so
+quale intendessi: il piano adotta <strong>ESA come metodo di screening nell'MVP</strong>, con
+SAIF e RS in una milestone successiva (domanda B1, §9).</p>
+<p>Uscite della fase B: <code>ExplorationResult</code> per ROI con indicatori e loro
+affidabilità (<code>supported | weak | inconclusive | not_applicable</code> + motivo);
+insieme dei candidati annotato (non ridotto); inizializzazioni.</p>
+<p>Condizioni di arresto: nessuna (la fase non può bloccare il fitting); se tutti
+gli indicatori sono inconclusivi si procede con l'insieme completo dei modelli
+eleggibili.</p>
+<h4 id="c-registro-dei-modelli-e-fitting">C. Registro dei modelli e fitting</h4>
+<p>Il registro (§4.2) distingue tre famiglie che <strong>non sono intercambiabili</strong>:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Famiglia</th>
+<th>Esempi</th>
+<th>Stimano</th>
+<th>Confronto lecito</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Compartimentali (plasma o riferimento)</td>
+<td>1TCM, 2TCM, irr2TCM, 2TCM1K, 5K, SRTM, SRTM2</td>
+<td>microparametri e macroparametri; descrivono l'intera curva</td>
+<td>tra loro, sulla stessa TAC, con stessi pesi e stesso input (§3.2-E)</td>
+</tr>
+<tr>
+<td>Grafici</td>
+<td>Patlak, Logan, MA1</td>
+<td>un macroparametro (Ki o VT) dopo t*</td>
+<td>solo sul <strong>valore dello stimando</strong> (es. Ki Patlak vs Ki irr2TCM), non su criteri di fit</td>
+</tr>
+<tr>
+<td>Esplorativi / data-driven</td>
+<td>ESA, RS, SAIF, descrittivi</td>
+<td>spettro, macroparametri</td>
+<td>idem: concordanza dello stimando e coerenza qualitativa</td>
+</tr>
+</tbody>
+</table></div>
+<p>Strategia di fitting (ROI):</p>
+<ol>
+<li><strong>Eleggibilità</strong>: un modello entra solo se i suoi requisiti di input sono
+   soddisfatti (dal contratto) e non è escluso dalle direttive.</li>
+<li><strong>Inizializzazione</strong>, in ordine: valori forniti dall'utente → derivati
+   dalla SA (β → autovalori; α → K1) o dai metodi grafici → p0 di default del
+   registro (oggi quelli MATLAB, <code>plasma.py:116</code>).</li>
+<li><strong>Multistart</strong>: campionamento in scala logaritmica entro i bound
+   (Latin hypercube) più le inizializzazioni sopra; numero di start fissato dal
+   budget. A differenza di <code>wnlls</code> oggi, si <strong>conservano tutti i minimi</strong> (per
+   la stabilità, §3.2-E).</li>
+<li><strong>Ottimizzazione vincolata</strong>: TRF con bound inferiori <strong>e superiori</strong>
+   (riutilizzo di <code>wnlls</code>), eventualmente in parametrizzazione logaritmica.</li>
+<li><strong>Pesatura</strong>: lo schema di pesi fa parte del modello statistico e va
+   dichiarato. Opzioni: <code>matlab</code> (esistente), durata del frame, conteggi
+   corretti per decadimento (σ² ∝ C·e^{λt}/Δt, richiede emivita e stato del
+   decadimento), pesi iterativamente ricalcolati dalla predizione del modello
+   (evitano la dipendenza dei pesi dal rumore della TAC stessa), uniformi.
+   Lo stesso schema è usato per tutti i modelli confrontati.</li>
+<li><strong>Integrazione sul frame</strong>: default <code>mean</code> (media sul frame,
+   <code>conv.sample_frames</code>); <code>mid</code> solo per compatibilità con MATLAB, kinfitr e petfit.</li>
+<li><strong>Delay e Vb</strong>: parametri da stimare o da fissare; la scelta crea varianti
+   annidate dello stesso modello (es. 2TCM, 2TCM+delay, 2TCM[Vb=0.05]).</li>
+<li><strong>Errori</strong>: start falliti registrati (non solo scartati); fit al bound;
+   J'J malcondizionata → flag di non identificabilità locale (numero di
+   condizione, rango), <strong>non</strong> silenziata da <code>pinv</code>.</li>
+<li><strong>Incertezza</strong> (in ordine di costo):
+   - covarianza asintotica (Fisher) e correlazioni, CV;
+   - VB per ROI con prior deboli (riuso di <code>fit_vb</code>), come controllo;
+   - bootstrap dei residui pesati (wild bootstrap, per l'eteroschedasticità)
+     o parametrico dal modello fittato;
+   - profile likelihood per i parametri e gli stimandi di interesse
+     (Raue et al. 2009);
+   - MCMC per ROI selezionate (dopo l'MVP).</li>
+</ol>
+<p>Uscita: <code>FitResult</code> per (modello × ROI × metodo di stima), con tutti i minimi,
+diagnostica e provenienza (§4.4).</p>
+<h4 id="d-pianificazione-adattiva">D. Pianificazione adattiva</h4>
+<p>Planner <strong>deterministico</strong>, basato su regole versionate, che opera su un
+grafo di passi (DAG) e su uno stato per ogni coppia (modello, ROI):</p>
+<pre><code>ineleggibile ── (requisiti soddisfatti) ──&gt; candidato
+candidato ── (fit eseguito) ──&gt; fittato
+fittato ── (valutazione) ──&gt; supportato | indistinguibile | sfavorito | non identificabile
+sfavorito ── (nuova evidenza / audit) ──&gt; candidato      (mai cancellato)
+</code></pre>
+<p>Ordine dei passi (dal meno al più costoso):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Livello</th>
+<th>Passi</th>
+<th>Costo indicativo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L0</td>
+<td>contratto, QC</td>
+<td>secondi</td>
+</tr>
+<tr>
+<td>L1</td>
+<td>descrittivi, Patlak/Logan multi-t*, ESA sulle ROI</td>
+<td>secondi</td>
+</tr>
+<tr>
+<td>L2</td>
+<td>fit WNLLS multistart di <strong>tutti</strong> i modelli eleggibili su tutte le ROI</td>
+<td>secondi-minuti</td>
+</tr>
+<tr>
+<td>L3</td>
+<td>confronto, residui, stabilità, Fisher, sensibilità a pesi/delay</td>
+<td>secondi</td>
+</tr>
+<tr>
+<td>L4</td>
+<td>bootstrap e profile likelihood sull'insieme supportato + indistinguibile</td>
+<td>minuti</td>
+</tr>
+<tr>
+<td>L5</td>
+<td>robustezza all'input (perturbazioni della frazione di parent, del BPR, del delay), troncamento temporale</td>
+<td>minuti</td>
+</tr>
+<tr>
+<td>L6</td>
+<td>cluster/supervoxel (§3.2-F)</td>
+<td>minuti</td>
+</tr>
+<tr>
+<td>L7</td>
+<td>voxel (VB <code>vbpet</code>, su DEI via sbatch)</td>
+<td>minuti-ore</td>
+</tr>
+</tbody>
+</table></div>
+<p>Nell'MVP L2 fitta <strong>tutti</strong> i modelli eleggibili: con 8 modelli e decine di ROI
+il costo è basso e si evita di scartare alternative in anticipo. L'adattività
+riguarda i passi costosi (L4-L7): quali modelli, quali ROI, quanta
+ricampionatura.</p>
+<p>Regole (esempi; ogni regola ha un ID, una versione e soglie configurabili):</p>
+<ul>
+<li><strong>R-ELIG</strong>: requisito di input mancante → <code>ineleggibile</code> con motivo.</li>
+<li><strong>R-DISFAVOR</strong> (esclusione <em>soft</em>): un modello diventa <code>sfavorito</code> solo se,
+  nella <strong>maggioranza</strong> delle ROI rilevanti, (a) ΔAICc &gt; 10 rispetto al migliore
+  <strong>e</strong> (b) residui strutturati (runs test p &lt; 0.01), <strong>oppure</strong> se l'utente lo
+  esclude. Mai su una singola ROI, mai sul solo errore di fit.</li>
+<li><strong>R-INDIST</strong>: modelli con ΔAICc &lt; 2-4 e residui non strutturati →
+  <code>indistinguibile</code>; si passa a L4 per tutti.</li>
+<li><strong>R-ESCALATE</strong>: residui strutturati in tutti i modelli → si aggiungono
+  varianti (delay, Vb libero, modello più complesso) o si segnala un possibile
+  modello mancante dai candidati.</li>
+<li><strong>R-NONID</strong>: profilo piatto o |ρ| &gt; 0.95 o CV &gt; soglia → parametro
+  <code>non identificabile</code>; si verifica se lo <strong>stimando</strong> di interesse resta
+  identificabile.</li>
+<li><strong>R-ASK</strong>: lo stimando richiesto dipende da un'informazione mancante (es.
+  reversibilità con scansione breve, BPR) → domanda bloccante all'utente.</li>
+<li><strong>R-STOP</strong>: stimandi richiesti identificati con incertezza sotto la soglia
+  delle direttive e robusti alle perturbazioni previste; oppure budget esaurito
+  (si riporta cosa non è stato fatto); oppure domanda bloccante senza risposta.</li>
+</ul>
+<p>Ogni applicazione di regola produce un <code>DecisionRecord</code> (regola, versione,
+input, soglie, esito). Il planner è quindi verificabile riga per riga.</p>
+<p><strong>Modalità audit (esaustiva)</strong>: esegue L2-L5 per tutti i modelli eleggibili,
+tutte le ROI e tutte le varianti; confronta poi l'insieme "supportato +
+indistinguibile" del planner con quello esaustivo (§8.4). Serve a validare le
+regole, non all'uso corrente.</p>
+<h4 id="e-confronto-e-identificabilita">E. Confronto e identificabilità</h4>
+<p>Principio: <strong>nessun punteggio aggregato</strong>. Il report presenta un registro delle
+evidenze, criterio per criterio.</p>
+<p><strong>Classe di confrontabilità.</strong> Due fit sono confrontabili con criteri di
+likelihood (AIC, AICc, BIC, test F, LRT) solo se condividono: stessa TAC (hash),
+stessi frame inclusi, stesso schema di pesi (valori identici), stesso modello di
+rumore, stesso input (compreso il trattamento del delay e del BPR), stessa
+integrazione sul frame. IIPD calcola un identificativo di classe e <strong>rifiuta</strong>
+il confronto tra classi diverse. Modelli grafici ed esplorativi si confrontano
+solo sullo stimando.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Criterio</th>
+<th>Quando è utilizzabile</th>
+<th>Limiti</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Residui</strong> (runs test, autocorrelazione, struttura nei frame precoci, normalità dei residui pesati)</td>
+<td>sempre</td>
+<td>i pesi errati creano struttura; i frame precoci riflettono delay/dispersione/Vb</td>
+</tr>
+<tr>
+<td><strong>AICc</strong></td>
+<td>stessa classe; n piccolo (frame 20-40) → preferire AICc ad AIC (Hurvich &amp; Tsai 1989 <span class="tag check">DA VERIFICARE</span>)</td>
+<td>presuppone pesi corretti; con modelli annidati ai bound non quantifica la significatività</td>
+</tr>
+<tr>
+<td><strong>BIC</strong></td>
+<td>stessa classe</td>
+<td>n = numero di frame con peso &gt; 0; penalità forte con pochi frame</td>
+</tr>
+<tr>
+<td><strong>Test F / LRT</strong></td>
+<td>modelli annidati, stessa classe</td>
+<td>se il vincolo è al bordo dello spazio parametrico (k4 = 0, Vb = 0) la distribuzione χ² non vale: usare bootstrap parametrico</td>
+</tr>
+<tr>
+<td><strong>Pesi di Akaike, model averaging</strong></td>
+<td>quando più modelli restano plausibili</td>
+<td>Turkheimer et al. 2003 propongono di passare dalla selezione alla media dei modelli quando la scelta è indecidibile; la media ha senso solo per stimandi comuni (VT, Ki)</td>
+</tr>
+<tr>
+<td><strong>Free energy VB</strong></td>
+<td>stessi dati, pesi e prior <strong>non</strong> stimati dagli stessi dati</td>
+<td>con i prior regionali di <code>vbpet</code> non è una evidenza confrontabile (§2.4)</td>
+</tr>
+<tr>
+<td><strong>Validazione predittiva</strong></td>
+<td>troncamento temporale (fit sui primi T' minuti, predizione del resto)</td>
+<td>non è una cross-validation indipendente: i frame sono correlati nel tempo</td>
+</tr>
+<tr>
+<td><strong>Leave-one-subject-out</strong></td>
+<td>prior di popolazione, coorti</td>
+<td>richiede più soggetti</td>
+</tr>
+<tr>
+<td><strong>Stabilità all'inizializzazione</strong></td>
+<td>sempre</td>
+<td>minimi distinti con costo quasi uguale e parametri diversi → non identificabilità pratica</td>
+</tr>
+<tr>
+<td><strong>Identificabilità strutturale</strong></td>
+<td>offline, per configurazione (modello, input, parametri fissi) con DAISY (Bellu et al. 2007), SIAN (Hong et al. 2019) o GenSSI (Chiş et al. 2011)</td>
+<td>risultato teorico, non garantisce stime precise; da precalcolare e salvare nel registro</td>
+</tr>
+<tr>
+<td><strong>Identificabilità pratica</strong>: profile likelihood (Raue et al. 2009), autovalori della Fisher, correlazioni, CV</td>
+<td>ROI con SNR sufficiente</td>
+<td>costosa per voxel; si applica a ROI e cluster</td>
+</tr>
+<tr>
+<td><strong>Parametri al bound</strong></td>
+<td>sempre</td>
+<td>un parametro a 0 può indicare un modello sovraparametrizzato (es. k4 → irr2TCM)</td>
+</tr>
+<tr>
+<td><strong>Plausibilità fisiologica</strong></td>
+<td>intervalli forniti dall'utente o da fonti citate</td>
+<td>per un tracciante nuovo spesso non esistono: è un avviso, non un criterio di esclusione automatico</td>
+</tr>
+<tr>
+<td><strong>Robustezza</strong></td>
+<td>perturbazioni di pesi, delay, frazione di parent, BPR, t*, integrazione mid/mean, durata della scansione</td>
+<td>riportata come "la conclusione regge / si inverte se…"</td>
+</tr>
+</tbody>
+</table></div>
+<p>Lettura congiunta (esempi di frasi del report, generate da template sul
+registro delle evidenze):</p>
+<ul>
+<li>"2TCM preferito a 1TCM in 14/14 ROI (ΔAICc 18-95); i residui di 1TCM sono
+  strutturati nei primi 10 min. 2TCM e 2TCM+delay indistinguibili (ΔAICc &lt; 2)."</li>
+<li>"k3 e k4 non identificabili separatamente (ρ = −0.98, profilo piatto verso
+  l'alto); VT identificabile (CV 6%, profilo chiuso)."</li>
+<li>"Ki da Patlak (t* 20-40 min) e da irr2TCM concordano entro il 5%; la
+  conclusione 'irreversibile' dipende dalla durata di 60 min: il test di
+  troncamento mostra che con 90 min k4 sarebbe stimabile solo se &gt; 0.005/min
+  [condizione da simulazione, non da dati]."</li>
+</ul>
+<h4 id="f-dallorgano-al-voxel">F. Dall'organo al voxel</h4>
+<p>Percorso: <strong>organo/ROI → cluster/supervoxel → voxel</strong>.</p>
+<ol>
+<li><strong>ROI/organo</strong>: fasi A-E complete.</li>
+<li><strong>Cluster/supervoxel</strong> <span class="tag prop">PROPOSTA</span>: all'interno di ogni organo, cluster
+   sulle TAC normalizzate o su descrittori cinetici (spettro, Patlak/Logan
+   voxel-wise), con vincolo di contiguità opzionale (supervoxel). Su ogni
+   cluster si ripetono C-E in forma ridotta: se l'insieme dei modelli supportati
+   del cluster differisce da quello dell'organo, il cluster viene trattato come
+   regione a sé (lesioni, eterogeneità). Precedente diretto: l'approccio
+   gerarchico multi-scala ROI → cluster → voxel per la generazione di mappe
+   parametriche (Rizzo et al. 2012; 2013).</li>
+<li><strong>Voxel</strong>: <code>vbpet</code> (VB con prior regionali <code>R</code> o spaziali <code>S</code>).</li>
+</ol>
+<p>Tre modi diversi di usare l'informazione del livello superiore, da tenere
+distinti nel report:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Modo</th>
+<th>Effetto</th>
+<th>Rischio</th>
+<th>In <code>vbpet</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Inizializzazione</strong></td>
+<td>solo punto di partenza</td>
+<td>nessun bias se la convergenza è robusta</td>
+<td><code>M_init</code> in <code>fit_vb</code></td>
+</tr>
+<tr>
+<td><strong>Regolarizzazione</strong> (prior informativo)</td>
+<td>contrazione verso la media regionale</td>
+<td>bias verso il regionale in voxel atipici (lesioni, bordi)</td>
+<td>prior <code>R</code> (sd = λ·media, λ=0.5), <code>S</code> (MRF)</td>
+</tr>
+<tr>
+<td><strong>Inferenza gerarchica</strong></td>
+<td>iperparametri regionali stimati insieme ai voxel</td>
+<td>più costosa; richiede un modello di popolazione</td>
+<td><span class="tag prop">PROPOSTA</span> dopo l'MVP</td>
+</tr>
+</tbody>
+</table></div>
+<p>Accorgimenti:</p>
+<ul>
+<li><strong>Modello imposto ai voxel</strong>: prima di applicare un modello a tutti i voxel di
+  un organo, verificare a livello cluster che sia supportato; mappe di residui e
+  di <code>F</code> per localizzare dove il modello non regge.</li>
+<li><strong>Lesioni e strutture non segmentate</strong>: un prior regionale le spinge verso il
+  tessuto sano. Rilevazione tramite residui voxel e confronto <code>R</code> vs prior
+  debole <code>N</code>; eventualmente label aggiuntiva.</li>
+<li><strong>Bordi</strong>: effetto di volume parziale e prior che attraversano i bordi
+  (<code>--spatial-within-roi</code> esiste); i voxel di bordo vanno marcati nel report.</li>
+<li><strong>Propagazione dell'incertezza</strong>: oggi la sd del prior è λ·|media| e ignora
+  l'errore della stima regionale (<code>make_priors</code>, <code>regional.py:154</code>). Proposta:
+  sd ≥ max(λ|m|, k·SE_ROI), oppure prior derivati dal bootstrap regionale.</li>
+<li><strong>Confronti obbligatori nel report voxel</strong>: prior deboli vs <code>R</code> vs <code>S</code>;
+  indice di contrazione (quanto le stime voxel si avvicinano alla media
+  regionale rispetto ai prior deboli); sul fantoccio, errore separato per tessuto
+  omogeneo, bordi e lesioni.</li>
+<li><strong>Selezione di modello per voxel</strong>: solo con prior comuni o indipendenti dai
+  dati del soggetto (§2.4); altrimenti si riportano le mappe di un modello già
+  scelto a livello cluster.</li>
+</ul>
+<hr />
+<h2 id="4-contratti-dati-e-interfacce-proposte">4. Contratti dati e interfacce proposte</h2>
+<p>Schemi in Python (dataclass o pydantic; scelta da fare in M0). Tutti gli oggetti
+sono immutabili, serializzabili in JSON, con un <code>hash</code> di contenuto.</p>
+<h3 id="41-dataset">4.1 Dataset</h3>
+<pre><code class="language-python">class Provenance(Enum): PROVIDED, DERIVED, ASSUMED_BY_USER, DEFAULT, MISSING
+
+@dataclass(frozen=True)
+class Field[T]:
+    value: T | None
+    status: Provenance
+    source: str          # file, messaggio dell'utente (id), regola
+    note: str = &quot;&quot;
+
+@dataclass(frozen=True)
+class InputFunction:
+    kind: Literal[&quot;arterial&quot;, &quot;idif&quot;, &quot;reference&quot;, &quot;none&quot;]
+    t_min: np.ndarray
+    plasma_total: Field[np.ndarray]
+    parent_fraction: Field[np.ndarray]     # MISSING ≠ &quot;uguale a 1&quot;
+    whole_blood: Field[np.ndarray]
+    blood_to_plasma: Field[float | np.ndarray]
+    delay_min: Field[float]
+    dispersion_corrected: Field[bool]
+    reference_label: Field[str]            # se kind == &quot;reference&quot;
+    reference_validity: Field[str]         # motivazione dichiarata
+
+@dataclass(frozen=True)
+class DatasetRecord:
+    id: str; hash: str
+    tracer: Field[str]; radionuclide: Field[str]; half_life_min: Field[float]
+    frames: Frames                         # riuso di vbpet.models.base.Frames
+    activity_unit: Field[str]
+    decay_corrected: Field[bool]; decay_ref_time: Field[str]
+    corrections: dict[str, Field[bool]]   # attenuation, scatter, randoms, motion, pvc
+    tacs: pd.DataFrame | None              # frame × ROI
+    image_4d: Path | None; dseg: Path | None; labels: dict[int, str]
+    input: InputFunction
+    injected_dose: Field[float]; body_weight: Field[float]
+    qc: &quot;QCReport&quot;
+</code></pre>
+<h3 id="42-registro-dei-modelli">4.2 Registro dei modelli</h3>
+<pre><code class="language-python">@dataclass(frozen=True)
+class ParamSpec:
+    name: str; unit: str; lower: float; upper: float; p0: float
+    scale: Literal[&quot;linear&quot;, &quot;log&quot;] = &quot;log&quot;
+
+@dataclass(frozen=True)
+class ModelSpec:
+    id: str                        # &quot;2TCM&quot;, &quot;2TCM+delay&quot;, &quot;2TCM[Vb=0.05]&quot;
+    family: Literal[&quot;compartmental_plasma&quot;, &quot;compartmental_reference&quot;,
+                    &quot;graphical&quot;, &quot;spectral&quot;, &quot;descriptive&quot;]
+    requires: frozenset[str]       # {&quot;plasma_parent&quot;, &quot;whole_blood&quot;}, {&quot;reference_tac&quot;}
+    params: tuple[ParamSpec, ...]
+    estimands: dict[str, Callable] # VT, Ki, BPnd, K1, R1 … (riuso Model.derived)
+    assumptions: tuple[str, ...]   # testo + id: &quot;reversible&quot;, &quot;no_radiometabolites_in_tissue&quot;
+    nests: tuple[tuple[str, dict], ...]   # (modello più semplice, vincolo) es. (&quot;irr2TCM&quot;, {&quot;k4&quot;: 0})
+    structural_identifiability: dict      # esito precalcolato per configurazione, con strumento e data
+    estimators: frozenset[str]     # {&quot;wnlls&quot;, &quot;vb&quot;, &quot;linear&quot;, &quot;nnls&quot;}
+    backend: &quot;vbpet.models.base.Model | Callable&quot;
+    references: tuple[str, ...]
+</code></pre>
+<p>Il <code>Model</code> di <code>vbpet</code> resta il backend numerico; <code>ModelSpec</code> aggiunge i
+metadati. I modelli grafici e spettrali implementano un'interfaccia diversa
+(<code>Estimator.estimate(dataset, roi, config) -&gt; EstimandResult</code>), perché non
+hanno <code>predict</code> sui frame nello stesso senso.</p>
+<h3 id="43-direttive">4.3 Direttive</h3>
+<pre><code class="language-python">@dataclass(frozen=True)
+class Directive:
+    version: int; parent: int | None; created: str; author: Literal[&quot;user&quot;, &quot;llm_proposal&quot;, &quot;default&quot;]
+    goals: tuple[Estimand, ...]          # es. VT nelle ROI X, Ki nel tumore
+    regions: tuple[str, ...]
+    level: Literal[&quot;roi&quot;, &quot;cluster&quot;, &quot;voxel&quot;]
+    include_models: frozenset[str]; exclude_models: frozenset[str]
+    assumptions: dict[str, Field]        # reversibility, reference_validity, parent_fraction_model …
+    noise_model: str; weights: str; frame_sampling: str
+    thresholds: dict[str, float]         # ΔAICc, CV massimo, |ρ| massimo …
+    budget: Budget                       # tempo, GPU sì/no, numero di bootstrap
+    explanation_level: Literal[&quot;novice&quot;, &quot;expert&quot;]
+</code></pre>
+<p>Una modifica è una <code>DirectivePatch</code> (operazioni JSON-patch) con autore e
+messaggio d'origine; diventa effettiva solo dopo validazione di schema e
+controlli semantici (§6.2).</p>
+<h3 id="44-piano-fit-valutazioni-report">4.4 Piano, fit, valutazioni, report</h3>
+<pre><code class="language-python">@dataclass(frozen=True)
+class PlanStep:
+    id: str; kind: str                   # &quot;qc&quot;, &quot;esa&quot;, &quot;fit&quot;, &quot;bootstrap&quot;, &quot;profile&quot;, …
+    inputs: tuple[str, ...]              # hash degli oggetti a monte
+    config: dict; directive_fields: tuple[str, ...]   # campi delle direttive da cui dipende
+    cache_key: str                       # hash(kind, inputs, config, campi direttive, versione codice)
+    reason: str                          # DecisionRecord che l'ha generato
+
+@dataclass(frozen=True)
+class FitResult:
+    id: str; model: str; roi: str; estimator: str; comparability_class: str
+    minima: tuple[Minimum, ...]          # tutti gli start: theta, costo, convergenza
+    best: Minimum; cov: np.ndarray; cond_number: float
+    residuals: np.ndarray; diagnostics: dict   # runs test, autocorrelazione, al bound …
+    estimands: dict[str, Estimate]       # valore, sd, IC, metodo dell'incertezza
+    seed: int; code_version: str; runtime_s: float
+
+@dataclass(frozen=True)
+class Assessment:
+    roi: str; estimand: str
+    status: dict[str, Literal[&quot;supported&quot;, &quot;indistinguishable&quot;, &quot;disfavored&quot;,
+                              &quot;non_identifiable&quot;, &quot;ineligible&quot;]]
+    evidence: tuple[EvidenceItem, ...]   # criterio, valore, modelli coinvolti, result id
+    robustness: tuple[RobustnessItem, ...]
+    open_issues: tuple[str, ...]
+
+@dataclass(frozen=True)
+class Report:
+    directive_version: int; dataset_hash: str
+    assessments: tuple[Assessment, ...]; decisions: tuple[DecisionRecord, ...]
+    assumptions: tuple[Field, ...]       # tutte le ASSUMED/DEFAULT, in evidenza
+    limitations: tuple[str, ...]
+</code></pre>
+<hr />
+<h2 id="5-architettura">5. Architettura</h2>
+<h3 id="51-moduli">5.1 Moduli</h3>
+<pre><code>iipd/
+  contract/     schemi (§4.1), loader BIDS-PET (via vbpet.io.bids) e TSV+JSON
+  qc/           controlli §3.2-A
+  explore/      descrittivi, patlak, logan, (ma1), esa; poi rs, saif
+  registry/     ModelSpec, wrapper dei modelli vbpet, tabella di identificabilità strutturale
+  fit/          wnlls batch (da vbpet.regional), vb (vbpet.vb), multistart, bootstrap, profile
+  assess/       classi di confrontabilità, criteri, identificabilità pratica, robustezza
+  planner/      regole versionate, macchina a stati, DecisionRecord, modalità audit
+  spatial/      cluster/supervoxel, ponte verso vbpet.voxel
+  directives/   schema, patch, validazione, storia
+  store/        cache content-addressed, DB dei run (SQLite), artefatti (Parquet/NIfTI/BIDS derivatives)
+  report/       registro delle evidenze → Markdown/HTML, template delle frasi
+  llm/          adattatore del provider, tool, controllo di aderenza dei numeri
+  cli.py        iipd init | plan | run | audit | report | chat
+</code></pre>
+<p>Dipendenza: <code>iipd → vbpet</code> (mai il contrario), in repository separati, con
+<code>vbpet</code> fissato a un commit o tag (§0.2). <code>vbpet</code> resta una BIDS-App autonoma.</p>
+<h3 id="52-riproducibilita-e-tracciamento">5.2 Riproducibilità e tracciamento</h3>
+<ul>
+<li><strong>Cache content-addressed</strong>: ogni <code>PlanStep</code> ha <code>cache_key</code> =
+  hash(tipo, hash degli input, configurazione, campi delle direttive da cui
+  dipende, versione del codice). Un risultato già calcolato con la stessa
+  chiave si riusa.</li>
+<li><strong>Seed</strong>: ogni passo stocastico (multistart, bootstrap, cluster) riceve un seed
+  derivato dal seed di sessione e dall'ID del passo; registrato nel risultato.</li>
+<li><strong>Versioni</strong>: versione di <code>iipd</code>, <code>vbpet</code>, JAX, commit git; registrate in ogni
+  risultato e nel report.</li>
+<li><strong>DB dei run</strong>: SQLite (sessioni, direttive, passi, risultati, decisioni,
+  messaggi). MLflow o simili non servono per l'MVP.</li>
+<li><strong>Output</strong> compatibili con BIDS derivatives (riuso di <code>RunWriter</code>).</li>
+</ul>
+<h3 id="53-parallelizzazione">5.3 Parallelizzazione</h3>
+<ul>
+<li>ROI × modelli × start × repliche bootstrap: fitting batch in JAX (<code>vmap</code> di un
+  Levenberg-Marquardt con bound per proiezione o in parametrizzazione log) —
+  da sviluppare, oggi <code>wnlls</code> è sequenziale. Fino ad allora: processi paralleli
+  su CPU.</li>
+<li>Voxel: <code>vbpet</code> su DEI tramite <code>sbatch</code> (regola di progetto); IIPD genera il job
+  e ne legge gli output.</li>
+</ul>
+<h3 id="54-perche-un-planner-deterministico-nellmvp">5.4 Perché un planner deterministico nell'MVP</h3>
+<ul>
+<li>Verificabilità: ogni decisione ha una regola e soglie leggibili.</li>
+<li>Riproducibilità: stesse direttive e dati → stesso piano.</li>
+<li>Validabilità: si confronta con la modalità esaustiva.</li>
+<li>L'autonomia dell'LLM non aggiunge capacità scientifica dove le regole sono
+  note; la aggiunge nell'interpretazione delle richieste e nella spiegazione.</li>
+</ul>
+<p>Componenti più autonomi da valutare <strong>dopo</strong> l'MVP, sempre dentro il perimetro
+dei tool: (a) l'LLM propone un nuovo modello candidato (es. 3TCM, doppio
+input) come <code>ModelSpec</code> da approvare e testare sul sintetico prima dell'uso;
+(b) l'LLM suggerisce esperimenti aggiuntivi (durata, campionamento) motivandoli
+con simulazioni eseguite dal motore (design sperimentale, cfr. Muzic et al. 1996).</p>
+<hr />
+<h2 id="6-interazione-tramite-llm">6. Interazione tramite LLM</h2>
+<h3 id="61-tre-livelli">6.1 Tre livelli</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Livello</th>
+<th>Responsabilità</th>
+<th>Non può</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LLM</td>
+<td>capire richieste, fare domande, proporre <code>DirectivePatch</code>, chiamare tool, spiegare risultati</td>
+<td>calcolare numeri, scrivere nello store, inventare valori di parametri o fonti</td>
+</tr>
+<tr>
+<td>Direttive validate</td>
+<td>stato esplicito di obiettivi, vincoli, assunzioni, preferenze</td>
+<td>contenere valori senza stato di provenienza</td>
+</tr>
+<tr>
+<td>Motore scientifico</td>
+<td>QC, fitting, valutazione, planner, report</td>
+<td>interpretare il linguaggio naturale</td>
+</tr>
+</tbody>
+</table></div>
+<p>Tool esposti all'LLM (lista chiusa): <code>get_state</code>, <code>get_missing_info</code>,
+<code>propose_directive_patch</code>, <code>preview_plan_change</code> (cosa verrebbe invalidato),
+<code>run_plan(until=...)</code>, <code>get_result(id)</code>, <code>get_assessment(roi, estimand)</code>,
+<code>explain_decision(decision_id)</code>, <code>list_models</code>.</p>
+<h3 id="62-direttive-dinamiche-versioni-conflitti-invalidazione">6.2 Direttive dinamiche: versioni, conflitti, invalidazione</h3>
+<ul>
+<li><strong>Storia append-only</strong>: ogni patch crea una nuova versione con genitore,
+  autore e messaggio d'origine. Si può tornare a una versione precedente.</li>
+<li><strong>Valori dedotti dall'LLM</strong> (es. "l'utente sembra intendere VT") restano
+  <code>llm_proposal</code> finché l'utente non li conferma, se cambiano i risultati.</li>
+<li><strong>Conflitti</strong>:
+  1. <em>direttiva vs direttiva</em>: vince l'affermazione esplicita più recente
+     dell'utente; l'LLM la riformula e chiede conferma se contraddice una
+     precedente;
+  2. <em>direttiva vs requisiti</em>: es. "usa solo 2TCM" senza input plasmatico →
+     rifiuto motivato del motore;
+  3. <em>direttiva vs evidenza</em>: es. "il tracciante è irreversibile" ma Patlak non
+     è lineare e 2TCM con k4 &gt; 0 è preferito → la direttiva resta (è
+     un'assunzione dell'utente), il report mostra l'evidenza contraria e la
+     sensibilità della conclusione a quell'assunzione. Mai sovrascrittura
+     silenziosa in nessuno dei due sensi.</li>
+<li><strong>Invalidazione</strong>: ogni <code>PlanStep</code> dichiara i campi delle direttive da cui
+  dipende. Una patch invalida solo i passi a valle dei campi modificati
+  (es. cambiare le soglie di ΔAICc rifà la valutazione ma non i fit; cambiare i
+  pesi rifà fit e valutazioni ma non QC né ESA). <code>preview_plan_change</code> mostra
+  all'utente cosa verrà rieseguito prima di applicare la patch.</li>
+</ul>
+<h3 id="63-niente-valori-inventati">6.3 Niente valori inventati</h3>
+<ul>
+<li>Ogni numero in un testo dell'LLM deve citare un <code>result_id</code>. Un controllo
+  automatico estrae i numeri dal testo e verifica che compaiano (con
+  arrotondamento) nei risultati citati; se no, il testo viene rigenerato o
+  marcato.</li>
+<li>Valori di letteratura proposti dall'LLM (es. intervalli tipici di K1) entrano
+  solo come <code>ASSUMED_BY_USER</code> dopo conferma esplicita e con fonte indicata;
+  senza fonte restano "suggerimento non verificato" e non entrano nei calcoli.</li>
+<li>L'intero framework funziona <strong>senza LLM</strong> (direttive in YAML, <code>iipd run</code>),
+  così l'LLM non è mai un requisito per la riproducibilità.</li>
+<li>Provider: interfaccia astratta; default ipotizzato Claude via API con tool use
+  (<code>claude-opus-5-5</code> per la conversazione, un modello più piccolo per la
+  verifica dei numeri). La scelta dipende dalla domanda B4 (privacy).</li>
+</ul>
+<h3 id="64-esempio-1-utente-non-esperto-illustrativo-numeri-fittizi">6.4 Esempio 1 — utente non esperto (illustrativo, numeri fittizi)</h3>
+<blockquote>
+<p><strong>Utente</strong>: Ho uno studio dinamico di 60 minuti con un nuovo tracciante per
+FAP in pazienti con tumore al polmone. Ho anche dei prelievi di sangue
+arterioso. Vorrei sapere quanto tracciante si lega al tumore.</p>
+<p><strong>Assistente</strong>: Ho caricato i dati: 28 frame, 0-60 min, unità Bq/mL, corretti
+per il decadimento (dal file JSON). Per i prelievi mi servono tre
+informazioni, perché cambiano i modelli che posso usare:
+1. I valori nel file sono plasma o sangue intero?
+2. È stata misurata la frazione di tracciante non metabolizzato (parent)? Se
+   non c'è, posso procedere solo assumendo che non ci siano metaboliti
+   radioattivi, e lo scriverò nel report come assunzione.
+3. Oltre al tumore, quali regioni ti interessano (es. polmone sano come
+   confronto)?</p>
+<p><strong>Utente</strong>: Plasma. Frazione di parent sì, è nella colonna
+<code>metabolite_parent_fraction</code>. Polmone sano e tumore.</p>
+<p><strong>Assistente</strong>: Grazie, aggiorno l'impostazione (versione 2). Prima faccio
+alcune analisi rapide. [run_plan fino a L3]</p>
+<p>Risultati principali, ciascuno con il riferimento all'analisi:
+- Nel tumore la curva continua a salire fino a 60 min e il grafico di Patlak
+  è lineare da circa 15 min in poi [R-031]: il comportamento è compatibile con
+  un accumulo che, entro 60 min, non viene rilasciato.
+- Ho confrontato 5 modelli. Due descrivono il tumore in modo equivalente
+  [A-007]: uno con accumulo irreversibile e uno con un rilascio molto lento.
+  I dati di 60 min non consentono di distinguerli.
+- La misura che ti interessa, la velocità netta di accumulo (Ki), è quasi la
+  stessa nei due modelli: 0.021 e 0.020 mL/cm³/min, con differenza minore
+  dell'incertezza [A-007, E-012].
+- La velocità di rilascio, invece, non è determinabile da questi dati [P-004].</p>
+<p>In sintesi: il valore di Ki nel tumore è affidabile; non è possibile dire se il
+legame sia davvero irreversibile. Per deciderlo servirebbe un'acquisizione più
+lunga o uno studio di spiazzamento. Nota: "accumulo irreversibile" è una
+proprietà della curva, non dimostra da sola un legame specifico al bersaglio.
+Vuoi che proceda con le mappe voxel per vedere se il tumore è omogeneo?</p>
+</blockquote>
+<h3 id="65-esempio-2-utente-esperto-illustrativo-numeri-fittizi">6.5 Esempio 2 — utente esperto (illustrativo, numeri fittizi)</h3>
+<blockquote>
+<p><strong>Utente</strong>: Candidati: 2TCM e 2TCM+delay, escludi 1TCM. Pesi da conteggi
+corretti per il decadimento. BPR costante 0.95. Profile likelihood su k4 e VT
+in putamen e cervelletto, 200 bootstrap wild.</p>
+<p><strong>Assistente</strong>: Patch proposta (v3 → v4):
+<code>exclude_models += {1TCM}</code>, <code>weights = decay_counts</code>,
+<code>input.blood_to_plasma = 0.95 (ASSUMED_BY_USER)</code>,
+<code>profile = {k4, VT} × {putamen, cerebellum}</code>, <code>bootstrap = 200, wild</code>.
+Due punti prima di applicarla:
+- I pesi <code>decay_counts</code> richiedono l'emivita e lo stato del decadimento: ci
+  sono (C-11, corretto a t=0). OK.
+- Nel file c'è già il sangue intero misurato [D-001]. Con un BPR costante lo
+  sostituirei; preferisci tenere la curva misurata per il termine Vb e usare
+  0.95 solo dove manca?</p>
+<p>Anteprima: cambiano i pesi, quindi vengono rifatti 28 fit e le valutazioni;
+QC, ESA e Patlak/Logan restano dalla cache.</p>
+<p><strong>Utente</strong>: Tieni il sangue intero misurato.</p>
+<p><strong>Assistente</strong>: Applicata come v4 (BPR non usato). [run_plan fino a L4]
+- Putamen: 2TCM vs 2TCM+delay ΔAICc = 1.3 [A-021], indistinguibili; delay
+  stimato 0.12 ± 0.09 min.
+- Profilo di k4 aperto verso l'alto in entrambe le regioni [P-011, P-012]:
+  k4 non identificabile; profilo di VT chiuso, CV 5% (putamen) e 7%
+  (cervelletto) [P-013, P-014]; le CV bootstrap sono coerenti (6%, 8%)
+  [B-003].
+- Con i pesi <code>matlab</code> (v3) VT del cervelletto era più alto del 3%
+  [confronto A-015 vs A-022]: entro l'incertezza.</p>
+<p>Decisioni del planner: R-INDIST (v1.2) su putamen; R-NONID (v1.0) su k4
+[D-104, D-105]. Vuoi il model averaging di VT con i pesi di Akaike?</p>
+</blockquote>
+<hr />
+<h2 id="7-mvp">7. MVP</h2>
+<h3 id="71-inclusioni-motivate">7.1 Inclusioni (motivate)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Inclusione</th>
+<th>Motivo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Livello ROI/organo</td>
+<td>è dove identificabilità e confronto sono affidabili e il costo è basso</td>
+</tr>
+<tr>
+<td>Contratto dati + QC con assunzioni esplicite</td>
+<td>prerequisito di tutto il resto; corregge le assunzioni silenziose di §2.3</td>
+</tr>
+<tr>
+<td>Registro con gli 8 modelli di <code>vbpet</code> + varianti (delay, <strong>dispersione</strong>, Vb fisso, k4=0)</td>
+<td>già implementati e validati vs MATLAB/petfit; delay e dispersione indispensabili nel whole-body</td>
+</tr>
+<tr>
+<td>Input da IDIF (label vascolare della dseg d'organo) con QC dedicato; sangue arterioso se disponibile</td>
+<td>caso standard nel whole-body (§0.1)</td>
+</tr>
+<tr>
+<td>Insiemi di candidati per organo; organi escretori marcati "fuori modello"</td>
+<td>nel corpo non esiste un modello unico (§0.1)</td>
+</tr>
+<tr>
+<td>Patlak, Logan, ESA (ESA non applicata al fegato)</td>
+<td>screening economico, ben documentato</td>
+</tr>
+<tr>
+<td>WNLLS multistart con tutti i minimi, bound superiori, 3 schemi di pesi</td>
+<td>base del confronto</td>
+</tr>
+<tr>
+<td>Criteri: residui, AICc/BIC per classe, stabilità, Fisher, bootstrap, profile likelihood</td>
+<td>le due domande (adeguatezza e identificabilità) senza punteggio unico</td>
+</tr>
+<tr>
+<td>Planner deterministico + modalità audit</td>
+<td>verificabilità</td>
+</tr>
+<tr>
+<td>Direttive YAML + chat LLM opzionale con tool chiusi e controllo dei numeri</td>
+<td>requisito d'interazione, senza dipendere dall'LLM</td>
+</tr>
+<tr>
+<td>Report Markdown/HTML con registro delle evidenze</td>
+<td>deliverable per l'utente</td>
+</tr>
+<tr>
+<td>Esportazione dei prior verso <code>vbpet</code> (stadio voxel lanciato a mano)</td>
+<td>ponte verso il voxel senza costruire il livello F</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="72-esclusioni-motivate">7.2 Esclusioni (motivate)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Esclusione</th>
+<th>Motivo</th>
+<th>Quando</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cluster/supervoxel e selezione di modello per voxel</td>
+<td>richiede prima un livello ROI validato</td>
+<td>M5</td>
+</tr>
+<tr>
+<td>RS, SAIF, basis pursuit</td>
+<td>varianti filtrate dipendenti da scelte (filtro, SNR) da validare</td>
+<td>M6</td>
+</tr>
+<tr>
+<td>Doppio input per il fegato (prima voce di M6), spillover miocardico, 3TCM, metaboliti in tessuto</td>
+<td>da aggiungere al registro dopo aver testato la pipeline</td>
+<td>M6+</td>
+</tr>
+<tr>
+<td>Fit del modello della frazione di parent</td>
+<td>oggi si usano le curve date; robustezza tramite perturbazioni</td>
+<td>M6</td>
+</tr>
+<tr>
+<td>Correzione del movimento</td>
+<td>fuori ambito: solo QC</td>
+<td>—</td>
+</tr>
+<tr>
+<td>MCMC, inferenza gerarchica</td>
+<td>costo e complessità</td>
+<td>dopo M5</td>
+</tr>
+<tr>
+<td>Identificabilità strutturale calcolata al volo</td>
+<td>tabella precalcolata offline basta</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Planner autonomo guidato da LLM</td>
+<td>non verificabile</td>
+<td>valutazione dopo M4</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="8-roadmap-e-validazione">8. Roadmap e validazione</h2>
+<h3 id="81-milestone">8.1 Milestone</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Contenuto</th>
+<th>Dipende da</th>
+<th>Criteri di accettazione (misurabili)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>M0</strong></td>
+<td>Domande ancora aperte (§9.3), nuovo repository con <code>vbpet</code> fissato, test di integrazione sulla superficie API di §0.2, scheletro del pacchetto, schemi §4, <code>ModelSpec</code> per gli 8 modelli + varianti, insiemi di candidati per organo, tabella di identificabilità strutturale (DAISY o SIAN) per ogni configurazione</td>
+<td>—</td>
+<td>contratto validato su <code>phantom_wb</code> (IDIF) e ds004869 sub-01 (sangue arterioso) con elenco corretto di lacune (verifica manuale); 100% dei modelli con requisiti, bound, stimandi, annidamenti; identificabilità strutturale registrata con strumento e data; test di integrazione verdi sul commit di <code>vbpet</code> fissato</td>
+</tr>
+<tr>
+<td><strong>M1</strong></td>
+<td>QC, descrittivi, Patlak, Logan, ESA</td>
+<td>M0</td>
+<td>ESA su sintetico senza rumore (1TCM, 2TCM, irr2TCM): numero di componenti corretto nel 100% dei casi, β entro 5%; Logan VT e Patlak Ki entro 2% da un'implementazione di riferimento indipendente (kinfitr o petfit, se i derivati lo contengono — <span class="tag check">DA VERIFICARE</span> quali stime <code>petfit</code> sono presenti in <code>testdata</code>); QC segnala il 100% dei difetti iniettati (unità, frame sovrapposti, NaN, decadimento)</td>
+</tr>
+<tr>
+<td><strong>M2</strong></td>
+<td>Fitting (batch, multistart con tutti i minimi, bound superiori, pesi), incertezza (Fisher, bootstrap, profile), criteri, classi di confrontabilità</td>
+<td>M0</td>
+<td>copertura degli IC 95% su sintetico in [0.90, 0.98] per gli stimandi identificabili; profile likelihood segnala come non identificabili i parametri resi tali per costruzione (es. k4 con scansione corta) in ≥ 95% delle repliche; confronto tra classi diverse rifiutato nel 100% dei test; su sintetico total-body (simulatore indipendente) delay recuperato entro un frame precoce e dispersione con IC che copre il vero valore in ≥ 90% delle repliche</td>
+</tr>
+<tr>
+<td><strong>M3</strong></td>
+<td>Planner, <code>DecisionRecord</code>, modalità audit, report</td>
+<td>M1, M2</td>
+<td>sulla suite di benchmark (§8.3): l'insieme supportato+indistinguibile del planner contiene il miglior modello dell'audit in ≥ 95% dei casi; nessun caso "modello unico" quando l'audit trova alternative con ΔAICc &lt; 2 su stimandi discordanti; costo ≤ 30% dell'audit; due esecuzioni con stessi dati e direttive producono report identici</td>
+</tr>
+<tr>
+<td><strong>M4</strong></td>
+<td>Direttive versionate, invalidazione, LLM con tool, controllo dei numeri</td>
+<td>M3</td>
+<td>suite di ≥ 30 conversazioni scriptate (non esperto, esperto, conflitti, informazioni mancanti): 100% dei numeri nel testo riconducibili a un <code>result_id</code>; 0 patch applicate senza validazione; dopo ogni patch vengono rieseguiti solo i passi dipendenti (verifica sul DAG)</td>
+</tr>
+<tr>
+<td><strong>M5</strong></td>
+<td>Cluster/supervoxel, controllo locale del modello, ponte voxel con confronti con e senza prior</td>
+<td>M3</td>
+<td>sul fantoccio con lesione non segmentata: lesione rilevata come regione con insieme di modelli o stime diversi; errore voxel riportato separatamente per tessuto omogeneo, bordi e lesione; indice di contrazione nel report</td>
+</tr>
+<tr>
+<td><strong>M6</strong></td>
+<td>RS, SAIF, varianti di input (dispersione, doppio input), fit della frazione di parent; validazione su più traccianti reali</td>
+<td>M5</td>
+<td>criteri come M1-M2 per i nuovi metodi; casi reali di §8.2 completati</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="82-piano-di-validazione">8.2 Piano di validazione</h3>
+<p><strong>Dati sintetici a parametri noti</strong>, con un simulatore <strong>indipendente</strong> dal
+codice di fitting (integrazione ODE ad alta risoluzione con <code>scipy.solve_ivp</code>
+e campionamento dei frame per integrazione, non <code>vbpet.conv</code>), per evitare
+l'<em>inverse crime</em>:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Scopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Modelli del registro (1TCM, 2TCM, irr2TCM, 2TCM1K, 5K, SRTM) a vari livelli di rumore</td>
+<td>recupero dei parametri, copertura</td>
+</tr>
+<tr>
+<td><strong>Modello non incluso tra i candidati</strong>: miscele eterogenee di tessuti 1TCM, 3TCM (legame non specifico separato), metaboliti radioattivi che entrano nel tessuto, input a doppio ingresso, dispersione dell'input</td>
+<td>il sistema deve segnalare residui strutturati o ambiguità, non dichiarare un vincitore con sicurezza</td>
+</tr>
+<tr>
+<td><strong>Assunzioni violate</strong>: frazione di parent sbagliata, BPR sbagliato, delay non modellato, regione di riferimento con legame specifico (cfr. Salinas et al. 2015)</td>
+<td>robustezza e capacità di segnalare la dipendenza dalle assunzioni</td>
+</tr>
+<tr>
+<td><strong>Rumore con struttura diversa</strong> da quella dei pesi (rumore dai conteggi con decadimento, frame correlati, outlier, movimento simulato in alcuni frame)</td>
+<td>evitare di validare solo quando il modello di rumore è corretto</td>
+</tr>
+<tr>
+<td><strong>Dati insufficienti</strong>: scansioni troncate (30/60/90 min), pochi frame precoci, SNR basso</td>
+<td>riconoscere la non identificabilità e chiedere informazioni</td>
+</tr>
+</tbody>
+</table></div>
+<p>Scenari specifici del whole-body da aggiungere al simulatore:</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>Scopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Fegato con doppio input reale, fittato con modelli a singolo input</td>
+<td>segnalazione di "modello fuori dai candidati"</td>
+</tr>
+<tr>
+<td>Delay e dispersione variabili lungo l'asse; IDIF con volume parziale e spillover</td>
+<td>robustezza all'input</td>
+</tr>
+<tr>
+<td>Organi escretori (reni, vescica) con attività non compartimentale</td>
+<td>esclusione corretta dalle conclusioni cinetiche</td>
+</tr>
+<tr>
+<td>Protocolli brevi (20-30 min) con frame precoci di pochi secondi</td>
+<td>identificabilità di K1/Vb vs reversibilità</td>
+</tr>
+<tr>
+<td>Lesioni non segmentate dentro organi</td>
+<td>livello cluster/voxel (M5)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Dati</strong> (in ordine di priorità per il whole-body):</p>
+<ul>
+<li><code>phantom_wb</code> (già in <code>vb_pet/testdata</code>): oggi è generato con gli stessi
+  modelli di <code>vbpet</code>; va rigenerato con il simulatore indipendente e con gli
+  scenari sopra. Le segmentazioni statiche QUADRA_HC (Zenodo, CC-BY, citate in
+  <code>DESIGN.md</code>) servono a fantocci con anatomia realistica.</li>
+<li>Dataset total-body dinamico FDG di 100 soggetti sani (Sci Data 2026, citato in
+  <code>DESIGN.md</code>): <strong>accesso da verificare</strong>; sarebbe il riferimento reale principale.</li>
+<li>Eventuali dati total-body/LAFOV locali (domanda B5).</li>
+<li>ds004869 sub-01 ([11C]MC1, sangue arterioso, <code>bloodstream</code>, <code>petfit</code>): controllo
+  sul cervello con input arterioso e confronto con <code>petfit</code>; la regola di
+  progetto limita a un soggetto copiato localmente.</li>
+</ul>
+<h3 id="83-metriche">8.3 Metriche</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Area</th>
+<th>Metrica</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Parametri</td>
+<td>bias e RMSE degli stimandi, separati per identificabili / non identificabili</td>
+</tr>
+<tr>
+<td>Incertezza</td>
+<td>copertura degli IC; calibrazione (quantili delle stime vs verità)</td>
+</tr>
+<tr>
+<td>Ambiguità</td>
+<td>precisione e richiamo nel segnalare "indistinguibile" o "non identificabile". Verità di riferimento: audit esaustivo su molte repliche, o dati a rumore molto basso; un caso è ambiguo se gli stimandi dei modelli plausibili differiscono più della loro incertezza</td>
+</tr>
+<tr>
+<td>Sicurezza</td>
+<td>tasso di conclusioni "certe" errate (modello unico sbagliato, IC che non copre la verità)</td>
+</tr>
+<tr>
+<td>Robustezza</td>
+<td>variazione delle conclusioni sotto le perturbazioni di §3.2-E</td>
+</tr>
+<tr>
+<td>Costo</td>
+<td>tempo e numero di fit, planner vs audit</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="84-baseline">8.4 Baseline</h3>
+<ol>
+<li>2TCM (o il modello standard del tracciante) sempre.</li>
+<li>Selezione con il solo AIC su tutti i modelli eleggibili.</li>
+<li>Audit esaustivo.</li>
+</ol>
+<p>Il planner è accettabile se è vicino a (3) per qualità (§8.1 M3) e migliore di
+(1) e (2) nel riconoscere i casi ambigui.</p>
+<hr />
+<h2 id="9-rischi-decisioni-aperte-domande-bloccanti">9. Rischi, decisioni aperte, domande bloccanti</h2>
+<h3 id="91-rischi">9.1 Rischi</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Rischio</th>
+<th>Mitigazione</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>L'utente non esperto prende "supportato dai dati" per verità biologica</td>
+<td>linguaggio dei template; sezione fissa "cosa non si può concludere"</td>
+</tr>
+<tr>
+<td>Esclusione prematura di modelli</td>
+<td>solo esclusioni <em>soft</em>, audit, nessuna esclusione su singola ROI o sul solo errore di fit</td>
+</tr>
+<tr>
+<td>Confronto illecito tra punteggi</td>
+<td>classi di confrontabilità imposte dal motore</td>
+</tr>
+<tr>
+<td>Pesi errati che guidano la selezione</td>
+<td>analisi di sensibilità ai pesi sempre nel report</td>
+</tr>
+<tr>
+<td>L'LLM inventa numeri o fonti</td>
+<td>tool chiusi, controllo automatico dei numeri, valori di letteratura solo con conferma e fonte</td>
+</tr>
+<tr>
+<td>Validazione circolare</td>
+<td>simulatore indipendente, scenari fuori modello, assunzioni violate</td>
+</tr>
+<tr>
+<td>Costo del bootstrap/profile su molte ROI</td>
+<td>adattività solo su L4+, fitting batch in JAX, DEI</td>
+</tr>
+<tr>
+<td>Privacy dei dati paziente con LLM esterno</td>
+<td>domanda B4; modalità senza LLM</td>
+</tr>
+<tr>
+<td>Deriva tra <code>vbpet</code> e IIPD</td>
+<td>IIPD dipende da versioni fissate di <code>vbpet</code>; test di integrazione</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="92-decisioni-reversibili-prese-con-unassunzione">9.2 Decisioni reversibili prese con un'assunzione</h3>
+<ul>
+<li>Documento temporaneamente in <code>vb_pet/docs/iipd/</code>, da spostare nel nuovo
+  repository in M0 (D2).</li>
+<li>Generalizzazioni del fitting proposte come PR a <code>vbpet</code>; nel frattempo
+  wrapper in <code>iipd</code> (§0.2).</li>
+<li>Python, JAX per il calcolo, SQLite per lo store, Markdown/HTML per i report.</li>
+<li>Integrazione sul frame <code>mean</code> come default.</li>
+<li>AICc come criterio informativo principale, BIC come secondo.</li>
+<li>Soglie iniziali: ΔAICc 2 (indistinguibile) / 10 (sfavorito), |ρ| 0.95, CV
+  stimando 25%; da calibrare in M3.</li>
+</ul>
+<h3 id="93-domande-bloccanti-cambiano-il-piano">9.3 Domande bloccanti (cambiano il piano)</h3>
+<ul>
+<li><strong>B1 — Lavoro di Veronese</strong>: intendevi la SA classica come screening (review
+  2016), SAIF (2010/2012) per traccianti irreversibili, SAKE come riferimento
+  software, o l'approccio gerarchico multi-scala (Rizzo et al. 2012/2013)?
+  Cambia cosa entra nell'MVP (oggi: ESA in MVP, SAIF/RS in M6). Con il
+  whole-body e traccianti irreversibili, SAIF potrebbe salire a M2-M3.</li>
+<li><del>B2 — Ambito prioritario</del> → <strong>risolta (D1)</strong>: whole-body.</li>
+<li><del>B3 — Collocazione del codice</del> → <strong>risolta (D2)</strong>: repository separato che
+  eredita il fitting da <code>vbpet</code>. Resta da scegliere dove: gitlab.dei
+  (privato) o GitHub.</li>
+<li><strong>B4 — LLM e privacy</strong>: i metadati e i risultati (non le immagini) possono
+  essere inviati a un'API esterna? Se no, serve un modello on-premise e cambia
+  il livello di capacità attendibile della chat.</li>
+<li><strong>B5 — Traccianti e dati whole-body</strong>: si parte da FDG (ben caratterizzato,
+  utile per validare) o da traccianti nuovi (es. FAPI, PSMA)? Ci sono dati
+  dinamici total-body/LAFOV locali utilizzabili? Cambia il registro iniziale e
+  il piano di validazione reale.</li>
+</ul>
+<h3 id="94-punti-ancora-da-approfondire">9.4 Punti ancora da approfondire</h3>
+<ul>
+<li>Implementazione e validazione di riferimento per ESA (SAKE non è Python;
+  verificare disponibilità del codice o reimplementare dalla letteratura).</li>
+<li>Risultati di identificabilità strutturale per 2TCM1K e 5K con Vb e delay.</li>
+<li>Modello di rumore per dati total-body (LAFOV) e per voxel piccoli.</li>
+<li>Criteri di confrontabilità per modelli con delay stimato vs input shiftato a
+  priori.</li>
+<li>Quali derivati <code>petfit</code> di ds004869 includono Logan/MA1 utilizzabili in M1.</li>
+<li>Scelta della label vascolare per l'IDIF (aorta discendente vs ventricolo
+  sinistro), correzione di volume parziale e spillover; modello di dispersione
+  da adottare (Wang et al. 2023).</li>
+<li>Formulazione del modello a doppio input per il fegato e sua identificabilità
+  con i protocolli disponibili (Zuo et al. 2019).</li>
+</ul>
+<hr />
+<h2 id="10-riferimenti">10. Riferimenti</h2>
+<h3 id="101-verificati-in-questa-sessione-metadati-da-pubmedeurope-pmc-o-dalla-bibliografia-della-review-di-veronese-et-al-2016">10.1 Verificati in questa sessione (metadati da PubMed/Europe PMC o dalla bibliografia della review di Veronese et al. 2016)</h3>
+<ul>
+<li>Bellu G, Saccomani MP, Audoly S, D'Angiò L. DAISY: a new software tool to test global identifiability of biological and physiological systems. <em>Comput Methods Programs Biomed</em> 2007;88:52-61. doi:10.1016/j.cmpb.2007.07.002</li>
+<li>Castellaro M, Rizzo G, Tonietto M, Veronese M, Turkheimer FE, Chappell MA, Bertoldo A. A Variational Bayesian inference method for parametric imaging of PET data. <em>NeuroImage</em> 2017;150:136-149. doi:10.1016/j.neuroimage.2017.02.009</li>
+<li>Chiş O, Banga JR, Balsa-Canto E. GenSSI: a software toolbox for structural identifiability analysis of biological models. <em>Bioinformatics</em> 2011;27:2610-2611. doi:10.1093/bioinformatics/btr431</li>
+<li>Cunningham VJ, Jones T. Spectral analysis of dynamic PET studies. <em>J Cereb Blood Flow Metab</em> 1993;13:15-23. doi:10.1038/jcbfm.1993.5</li>
+<li>Feng T, Zhao Y, Shi H, et al. Total-body quantitative parametric imaging of early kinetics of 18F-FDG. <em>J Nucl Med</em> 2021;62:738-744. doi:10.2967/jnumed.119.238113</li>
+<li>Golla SSV, Adriaanse SM, Yaqub M, et al. Model selection criteria for dynamic brain PET studies. <em>EJNMMI Phys</em> 2017;4:30. doi:10.1186/s40658-017-0197-0</li>
+<li>Gunn RN, Gunn SR, Cunningham VJ. Positron emission tomography compartmental models. <em>J Cereb Blood Flow Metab</em> 2001;21:635-652. doi:10.1097/00004647-200106000-00002</li>
+<li>Gunn RN, Gunn SR, Turkheimer FE, Aston JAD, Cunningham VJ. Positron emission tomography compartmental models: a basis pursuit strategy for kinetic modeling. <em>J Cereb Blood Flow Metab</em> 2002;22:1425-1439.</li>
+<li>Gunn RN, Lammertsma AA, Hume SP, Cunningham VJ. Parametric imaging of ligand-receptor binding in PET using a simplified reference region model. <em>NeuroImage</em> 1997;6:279-287. doi:10.1006/nimg.1997.0303</li>
+<li>Hong H, Ovchinnikov A, Pogudin G, Yap C. SIAN: software for structural identifiability analysis of ODE models. <em>Bioinformatics</em> 2019;35:2873-2874. doi:10.1093/bioinformatics/bty1069</li>
+<li>Innis RB, Cunningham VJ, Delforge J, et al. Consensus nomenclature for in vivo imaging of reversibly binding radioligands. <em>J Cereb Blood Flow Metab</em> 2007;27:1533-1539. doi:10.1038/sj.jcbfm.9600493</li>
+<li>Knudsen GM, Ganz M, Appelhoff S, et al. Guidelines for the content and format of PET brain data in publications and archives: a consensus paper. <em>J Cereb Blood Flow Metab</em> 2020;40:1576-1585. doi:10.1177/0271678X20905433</li>
+<li>Lammertsma AA, Hume SP. Simplified reference tissue model for PET receptor studies. <em>NeuroImage</em> 1996;4:153-158. doi:10.1006/nimg.1996.0066</li>
+<li>Li EJ, Spencer BA, Schmall JP, et al. Efficient delay correction for total-body PET kinetic modeling using pulse timing methods. <em>J Nucl Med</em> 2022;63:1266-1273. doi:10.2967/jnumed.121.262968</li>
+<li>Logan J, Fowler JS, Volkow ND, et al. Graphical analysis of reversible radioligand binding from time-activity measurements applied to [N-11C-methyl]-(-)-cocaine PET studies in human subjects. <em>J Cereb Blood Flow Metab</em> 1990;10:740-747.</li>
+<li>Muzic RF, Nelson AD, Saidel GM, Miraldi F. Optimal experiment design for PET quantification of receptor concentration. <em>IEEE Trans Med Imaging</em> 1996;15:2-12. doi:10.1109/42.481436</li>
+<li>Norgaard M, Matheson GJ, Hansen HD, et al. PET-BIDS, an extension to the brain imaging data structure for positron emission tomography. <em>Sci Data</em> 2022;9:65. doi:10.1038/s41597-022-01164-1</li>
+<li>Patlak CS, Blasberg RG, Fenstermacher JD. Graphical evaluation of blood-to-brain transfer constants from multiple-time uptake data. <em>J Cereb Blood Flow Metab</em> 1983;3:1-7. doi:10.1038/jcbfm.1983.1</li>
+<li>Peng J-Y, Aston JAD, Gunn RN, Liou C-Y, Ashburner J. Dynamic positron emission tomography data-driven analysis using sparse Bayesian learning. <em>IEEE Trans Med Imaging</em> 2008;27:1356-1369. doi:10.1109/TMI.2008.922185</li>
+<li>Raue A, Kreutz C, Maiwald T, et al. Structural and practical identifiability analysis of partially observed dynamical models by exploiting the profile likelihood. <em>Bioinformatics</em> 2009;25:1923-1929. doi:10.1093/bioinformatics/btp358</li>
+<li>Rizzo G, Turkheimer FE, Keihaninejad S, Bose SK, Hammers A, Bertoldo A. Multi-scale hierarchical generation of PET parametric maps: application and testing on a [11C]DPN study. <em>NeuroImage</em> 2012;59:2485-2493. doi:10.1016/j.neuroimage.2011.08.101</li>
+<li>Rizzo G, Turkheimer FE, Bertoldo A. Multi-scale hierarchical approach for parametric mapping: assessment on multi-compartmental models. <em>NeuroImage</em> 2013;67:344-353. doi:10.1016/j.neuroimage.2012.11.045</li>
+<li>Salinas CA, Searle GE, Gunn RN. The simplified reference tissue model: model assumption violations and their impact on binding potential. <em>J Cereb Blood Flow Metab</em> 2015;35:304-311. doi:10.1038/jcbfm.2014.202</li>
+<li>Schmidt K. Which linear compartmental systems can be analyzed by spectral analysis of PET output data summed over all compartments? <em>J Cereb Blood Flow Metab</em> 1999;19:560-569. doi:10.1097/00004647-199905000-00010</li>
+<li>Tonietto M, Rizzo G, Veronese M, et al. Plasma radiometabolite correction in dynamic PET studies: insights on the available modeling approaches. <em>J Cereb Blood Flow Metab</em> 2016;36:326-339. doi:10.1177/0271678X15610585</li>
+<li>Turkheimer FE, Hinz R, Cunningham VJ. On the undecidability among kinetic models: from model selection to model averaging. <em>J Cereb Blood Flow Metab</em> 2003;23:490-498. doi:10.1097/01.WCB.0000050065.57184.BB</li>
+<li>Turkheimer FE, Hinz R, Gunn RN, Aston JAD, Gunn SR, Cunningham VJ. Rank-shaping regularization of exponential spectral analysis for application to functional parametric mapping. <em>Phys Med Biol</em> 2003;48:3819-3841. doi:10.1088/0031-9155/48/23/002</li>
+<li>Veronese M, Bertoldo A, Bishu S, et al. A spectral analysis approach for determination of regional rates of cerebral protein synthesis with the L-[1-11C]leucine PET method. <em>J Cereb Blood Flow Metab</em> 2010;30:1460-1476. doi:10.1038/jcbfm.2010.26</li>
+<li>Veronese M, Schmidt KC, Smith CB, Bertoldo A. Use of spectral analysis with iterative filter for voxelwise determination of regional rates of cerebral protein synthesis with L-[1-11C]leucine PET. <em>J Cereb Blood Flow Metab</em> 2012;32:1073-1085. doi:10.1038/jcbfm.2012.27</li>
+<li>Veronese M, Rizzo G, Turkheimer FE, Bertoldo A. SAKE: a new quantification tool for positron emission tomography studies. <em>Comput Methods Programs Biomed</em> 2013;111:199-213. doi:10.1016/j.cmpb.2013.03.016</li>
+<li>Veronese M, Rizzo G, Bertoldo A, Turkheimer FE. Spectral analysis of dynamic PET studies: a review of 20 years of method developments and applications. <em>Comput Math Methods Med</em> 2016;2016:7187541. doi:10.1155/2016/7187541 (testo completo letto: sezioni su assunzioni, RS, SAIF, limiti, software)</li>
+<li>Wang Y, Spencer BA, Schmall J, et al. High-temporal-resolution lung kinetic modeling using total-body dynamic PET with time-delay and dispersion corrections. <em>J Nucl Med</em> 2023;64:1154-1161. doi:10.2967/jnumed.122.264810</li>
+<li>Wu Y, Carson RE. Noise reduction in the simplified reference tissue model for neuroreceptor functional imaging. <em>J Cereb Blood Flow Metab</em> 2002;22:1440-1452. doi:10.1097/01.WCB.0000033967.83623.34</li>
+<li>Zuo Y, Sarkar S, Corwin MT, et al. Structural and practical identifiability of dual-input kinetic modeling in dynamic PET of liver inflammation. <em>Phys Med Biol</em> 2019;64:175023. doi:10.1088/1361-6560/ab1f29</li>
+<li>Tjerkaski J, Cervenka S, Farde L, Matheson GJ. Kinfitr — an open-source tool for reproducible PET modelling: validation and evaluation of test-retest reliability. <em>EJNMMI Res</em> 2020;10:77. doi:10.1186/s13550-020-00664-8</li>
+</ul>
+<h3 id="102-non-verificati-in-questa-sessione-da-controllare-prima-delluso">10.2 Non verificati in questa sessione (da controllare prima dell'uso)</h3>
+<ul>
+<li>Hurvich CM, Tsai C-L. Regression and time series model selection in small samples. <em>Biometrika</em> 1989 (AICc).</li>
+<li>Burnham KP, Anderson DR. <em>Model Selection and Multimodel Inference</em>. Springer, 2002 (pesi di Akaike).</li>
+<li>Ichise M et al. 2002, MA1 (metodo grafico multilineare).</li>
+<li>Riferimento specifico per il bias di Logan dovuto al rumore (es. Slifstein &amp; Laruelle 2000).</li>
+<li>Talts S et al. 2018, simulation-based calibration (verificato solo il lavoro successivo: Modrák et al., <em>Bayesian Anal</em> 2025;20:461-488).</li>
+<li>Bertoldo A et al. 2001, modello 5K per FDG nel muscolo (presente nella bibliografia di Veronese et al. 2016, <em>Am J Physiol Endocrinol Metab</em> 2001;281:E524-E536; non verificato direttamente).</li>
+</ul>
+</main>
+</div>
+</body>
+</html>

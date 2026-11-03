@@ -43,6 +43,7 @@ class VBOptions:
     jacobian: str = "autodiff"  # or "numeric" (MATLAB computeJac2)
     nonneg: bool = True
     ard_init_zero: bool = True  # MATLAB: the ARD parameter starts from 0
+    max_stall: int = 0  # stop after this many iterations without F > best F + tol (0 = off)
 
 
 def _jac_numeric(f, u, D):
@@ -154,16 +155,37 @@ def _vb_init(z, w2, m0, L0, m_init, **kw):
         # the loop cannot run (non-finite F) the step-1 solution is returned, not zeros
         bF=jnp.array(-jnp.inf, dtype), bm=m, bL=L,
         bs=jnp.asarray(s, dtype), bc=jnp.asarray(c, dtype),
+        # diagnostics: iterations without a real improvement, sign changes of dF
+        stall=jnp.array(0), flips=jnp.array(0), dF=jnp.array(0.0, dtype),
     )
 
 
-def _active(st, opts):
+def _tol(F, opts):
     # |dF| below the rounding level of F cannot be resolved (matters in float32)
-    eps = jnp.finfo(st["F_new"].dtype).eps
-    tol = jnp.maximum(opts.tol, 10 * eps * jnp.abs(st["F_new"]))
-    return ((st["count"] < opts.max_iter)
-            & (jnp.abs(st["F_new"] - st["F_old"]) > tol)
-            & (st["trials"] < opts.max_trials))
+    eps = jnp.finfo(F.dtype).eps
+    return jnp.maximum(opts.tol, 10 * eps * jnp.abs(F))
+
+
+def _active(st, opts):
+    go = ((st["count"] < opts.max_iter)
+          & (jnp.abs(st["F_new"] - st["F_old"]) > _tol(st["F_new"], opts))
+          & (st["trials"] < opts.max_trials))
+    if opts.max_stall > 0:
+        go = go & (st["stall"] < opts.max_stall)
+    return go
+
+
+STOP_CONVERGED, STOP_TRIALS, STOP_STALL, STOP_MAX_ITER = 1, 2, 3, 4
+
+
+def _stop_reason(st, opts):
+    reason = jnp.where(st["count"] >= opts.max_iter, STOP_MAX_ITER, STOP_CONVERGED)
+    reason = jnp.where((reason == STOP_CONVERGED) & (st["trials"] >= opts.max_trials),
+                       STOP_TRIALS, reason)
+    if opts.max_stall > 0:
+        reason = jnp.where((reason == STOP_CONVERGED) & (st["stall"] >= opts.max_stall),
+                           STOP_STALL, reason)
+    return reason
 
 
 def _vb_run(st, z, w2, m0, L0, limit, **kw):
@@ -177,7 +199,12 @@ def _vb_run(st, z, w2, m0, L0, limit, **kw):
         J, k = K["evaluate"](m)
         F = K["free_energy"](s, c, m, L, k, J)
         better = F > st["bF"]
+        improved = F > st["bF"] + _tol(st["bF"], opts)
+        dF = F - st["F_new"]
         return dict(
+            stall=jnp.where(improved, 0, st["stall"] + 1),
+            flips=st["flips"] + ((dF * st["dF"]) < 0).astype(st["flips"].dtype),
+            dF=dF,
             count=st["count"] + 1, trials=trials, F_new=F, F_old=st["F_new"],
             m=m, L=L, s=s, c=jnp.asarray(c, st["F_new"].dtype), J=J, k=k,
             bF=jnp.where(better, F, st["bF"]),
@@ -201,6 +228,7 @@ def _vb_final(st, z, w2, m0, L0, **kw):
     _, F_data = K["free_energy"](st["bs"], st["bc"], st["bm"], st["bL"], k, J, parts=True)
     return dict(m=m_best, cov=jnp.linalg.inv(st["bL"]) * DD, L=st["bL"] / DD,
                 s=st["bs"], c=st["bc"], F=st["bF"], F_data=F_data, n_iter=st["count"],
+                stop=_stop_reason(st, kw["opts"]), flips=st["flips"],
                 fit=K["f"](st["bm"]))
 
 

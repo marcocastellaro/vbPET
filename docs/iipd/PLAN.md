@@ -76,21 +76,21 @@ Convenzioni usate nel documento:
   `vb.core.{fit_vb, VBOptions}`, `vb.spatial`,
   `voxel.{voxel_priors, fit_voxels, qc_flags}`, `io.bids`, `io.derivatives`.
 - **Dove vanno le modifiche al fitting**. Ciò che è generico va in `vbpet`, con
-  PR separate e solo con il tuo consenso, visto che `vbpet` è in sviluppo
-  attivo:
-  - bound superiori in `Model`;
-  - `wnlls` che restituisce tutti i minimi del multistart e il numero di
-    condizione, invece della sola `pinv`;
-  - protezione della divisione in 2TCM1K e 5K;
-  - LM batch in JAX;
-  - dispersione accanto al delay;
-  - Patlak e Logan (Patlak è già previsto in `DESIGN.md`).
+    PR separate e solo con il tuo consenso, visto che `vbpet` è in sviluppo
+    attivo:
+    - bound superiori in `Model`;
+    - `wnlls` che restituisce tutti i minimi del multistart e il numero di
+      condizione, invece della sola `pinv`;
+    - protezione della divisione in 2TCM1K e 5K;
+    - LM batch in JAX;
+    - dispersione accanto al delay;
+    - Patlak e Logan (Patlak è già previsto in `DESIGN.md`).
 
-  Ciò che è specifico di IIPD resta in `iipd`: metadati del registro, metodi
-  esplorativi (ESA), valutazione, planner, direttive, store, report, LLM.
-  Finché una modifica non è in `vbpet`, IIPD la **avvolge** (es. un proprio
-  ciclo multistart che chiama `least_squares` sul modello compilato di `vbpet`),
-  senza forkare il codice.
+    Ciò che è specifico di IIPD resta in `iipd`: metadati del registro, metodi
+    esplorativi (ESA), valutazione, planner, direttive, store, report, LLM.
+    Finché una modifica non è in `vbpet`, IIPD la **avvolge** (es. un proprio
+    ciclo multistart che chiama `least_squares` sul modello compilato di `vbpet`),
+    senza forkare il codice.
 - Questo documento migra nel nuovo repository in M0. Il nuovo repository avrà
   il proprio `PROVENANCE.md` (regola di progetto).
 

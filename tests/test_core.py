@@ -204,3 +204,30 @@ def test_spatial_free_energy_selects_best_sweep():
     Fh = r["F_history"]
     assert 2 <= len(Fh) <= 11 and np.all(np.isfinite(Fh))
     assert Fh[r["best_sweep"]] == Fh.max() and Fh.max() >= Fh[0]
+
+
+def test_rfx_bms_recovers_frequencies():
+    from vbpet.selection import rfx_bms
+    rng = np.random.default_rng(0)
+    N = 400
+    truth = rng.random(N) < 0.7  # 70% model 0
+    lme = np.zeros((N, 2))
+    lme[:, 0] = np.where(truth, 3.0, -3.0) + rng.normal(0, 0.5, N)
+    out = rfx_bms(lme)
+    assert abs(out["r"][0] - 0.7) < 0.06
+    assert out["xp"][0] > 0.99 and out["bor"] < 0.05
+    # no information: frequencies ~ uniform, omnibus risk high
+    flat = rfx_bms(rng.normal(0, 0.01, (N, 2)))
+    assert abs(flat["r"][0] - 0.5) < 0.1 and flat["bor"] > 0.5
+
+
+def test_stall_rule_and_stop_reasons():
+    prob = make_problem("2TCM", n_vox=64, seed=10)
+    m0, L0 = regional_prior(prob["p_true"], 0.5)
+    w2 = prob["weights"] ** 2
+    a = (prob["model"], prob["inp"], prob["frames"], prob["Z"], w2, m0, L0)
+    base = fit_vb(*a, VBOptions(max_iter=300))
+    stall = fit_vb(*a, VBOptions(max_iter=300, max_stall=10))
+    assert set(np.unique(base["stop"])) <= {1, 2, 4}
+    assert np.all(stall["n_iter"] <= base["n_iter"])
+    assert np.median(base["F"] - stall["F"]) < 1e-2  # stopping early loses (almost) nothing
