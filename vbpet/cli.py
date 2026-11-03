@@ -4,7 +4,6 @@
 """
 
 import argparse
-import json
 import logging
 import sys
 import time
@@ -38,9 +37,18 @@ def build_parser():
     g.add_argument("--weights", choices=["matlab", "duration", "uniform"], default="matlab")
     g.add_argument("--prior-lambda", type=float, default=0.5)
     g.add_argument("--priors-tsv", type=Path, help="use this prior table instead of stage 1")
+    g.add_argument("--frame-sampling", choices=["mean", "mid"],
+                   help="model value per frame: mean = average over the frame (default), "
+                        "mid = value at mid-frame (MATLAB vbPET, kinfitr/petfit)")
+    g.add_argument("--convolution", choices=["linear", "rect"],
+                   help="input convolution: linear = exact for a piecewise-linear input "
+                        "(default), rect = rectangle rule (MATLAB filter)")
+    g.add_argument("--input-step",
+                   help="input grid step: auto (t_peak/3 clipped to 1-10 s, default) | "
+                        "matlab (t_peak/3) | <minutes>")
     g.add_argument("--matlab-compat", action="store_true",
-                   help="rect convolution, mid-frame sampling, t_peak/3 grid (as the MATLAB code)")
-    g.add_argument("--input-step", default="auto", help="input grid step: auto|matlab|<minutes>")
+                   help="defaults as the MATLAB code: --convolution rect --frame-sampling mid "
+                        "--input-step matlab (each can still be set explicitly)")
     g = p.add_argument_group("VB")
     g.add_argument("--s0", type=float, default=1e6)
     g.add_argument("--c0", type=float, default=50.0)
@@ -95,8 +103,10 @@ def process_run(run, args):
     from .voxel import fit_voxels, to_volume, voxel_priors
 
     w = RunWriter(args.output_dir, run)
-    conv, sampling = ("rect", "mid") if args.matlab_compat else ("linear", "mean")
-    step = "matlab" if args.matlab_compat else args.input_step
+    mc = args.matlab_compat
+    conv = args.convolution or ("rect" if mc else "linear")
+    sampling = args.frame_sampling or ("mid" if mc else "mean")
+    step = args.input_step or ("matlab" if mc else "auto")
     try:
         step = float(step)
     except ValueError:
@@ -119,6 +129,7 @@ def process_run(run, args):
     log.info("dseg: %s (%d labels)", dseg_path, len(np.unique(dseg)) - 1)
     common = dict(Model=model.name, Convolution=conv, FrameSampling=sampling,
                   InputSource=blood.source, Segmentation=str(dseg_path),
+                  InputGridStepMin=float(inp.tp[1] - inp.tp[0]),
                   TimeUnits="min", ActivityUnits="kBq/mL")
 
     # --- stage 1

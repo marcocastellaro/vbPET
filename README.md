@@ -31,6 +31,11 @@ vbpet <bids_dir> <output_dir> participant --model 2TCM \
       --derivatives <dseg_derivative_dir> --dseg-desc gtm
 ```
 
+Discretisation: `--frame-sampling mean|mid` (model averaged over each frame,
+default, or taken at mid-frame as in the MATLAB code and kinfitr/petfit),
+`--convolution linear|rect`, `--input-step`; `--matlab-compat` sets all three to
+the MATLAB behaviour.
+
 Stage 1 fits the regional TACs of a PET-space segmentation (WNLLS) and builds
 region-based priors; stage 2 runs voxel-wise VB with those priors. Outputs are
 BIDS derivatives (`*_kinpar.tsv`, `*_tacs.tsv`, `*_model-<M>_meas-<p>_mimap.nii.gz`).
