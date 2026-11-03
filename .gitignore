@@ -7,3 +7,5 @@ __pycache__/
 .pytest_cache/
 # lab MATLAB code: local copy only, not to be published without the owners' consent
 third_party/vbPET_matlab/
+# cluster-specific job scripts (DEI), kept local
+jobs/

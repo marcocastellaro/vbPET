@@ -10,9 +10,9 @@
 # Not part of the BIDS App: the app expects the dseg already on the PET grid.
 set -euo pipefail
 PET=$1; T1=$2; DSEG=$3; OUT=$4; SEG=${5:-gtm}
-: "${FSLDIR:=/nfsd/opt/FSL/fsl607}"
+: "${FSLDIR:?set FSLDIR to your FSL installation}"
 export FSLDIR FSLOUTPUTTYPE=NIFTI_GZ
-PY=${PY:-/nfsd/biopetmri4/Users/Marco/code/vb_pet/env/vbpet/bin/python}
+PY=${PY:-python}
 
 base=$(basename "$PET"); prefix=${base%_pet.nii*}
 sub=$(echo "$prefix" | grep -o 'sub-[a-zA-Z0-9]*'); ses=$(echo "$prefix" | grep -o 'ses-[a-zA-Z0-9]*' || true)
