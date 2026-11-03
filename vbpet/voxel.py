@@ -5,47 +5,53 @@ import jax.numpy as jnp
 import numpy as np
 
 from .vb.core import VBOptions, fit_vb
+from .vb.spatial import fit_spatial, neighbours
 
 
-def voxel_priors(dseg, roi_info, priors, model, mask):
+def voxel_priors(lab, roi_info, priors, model):
     """Per-voxel prior mean/sd from the ROI each voxel belongs to.
 
-    Voxels in ``mask`` whose label has no prior are left out (``valid=False``).
-    Returns (idx (V,), m0 (V,P), sd (V,P), roi_name per voxel).
+    ``lab`` (V,): dseg label of each masked voxel. Voxels whose label has no
+    prior (unfitted or too small ROI) are dropped.
+    Returns (sel (V,) bool, m0 (Vs,P), sd (Vs,P), roi (Vs,) row index into ``priors``).
     """
     pnames = model.param_names
-    lab = np.asarray(dseg).astype(int)
-    by_index = dict(zip(roi_info["index"], roi_info["name"]))
-    table = priors.set_index("name")
-    flat_lab = lab.reshape(-1)
-    idx = np.flatnonzero(np.asarray(mask).reshape(-1) & (flat_lab > 0))
-    names = np.array([by_index.get(int(l), None) for l in flat_lab[idx]], dtype=object)
-    ok = np.array([n is not None and n in table.index for n in names])
-    idx, names = idx[ok], names[ok]
-    m0 = np.stack([table.loc[names, f"{p}_mean"].to_numpy(float) for p in pnames], 1)
-    sd = np.stack([table.loc[names, f"{p}_sd"].to_numpy(float) for p in pnames], 1)
-    return idx, m0, sd, names
+    lab = np.asarray(lab).astype(int)
+    row_of_name = {n: i for i, n in enumerate(priors["name"])}
+    lut = -np.ones(max(int(lab.max()), int(roi_info["index"].max())) + 1, np.int64)
+    for i, n in zip(roi_info["index"], roi_info["name"]):
+        lut[int(i)] = row_of_name.get(n, -1)
+    roi = np.where(lab > 0, lut[np.clip(lab, 0, None)], -1)
+    sel = roi >= 0
+    roi = roi[sel]
+    mean = priors[[f"{p}_mean" for p in pnames]].to_numpy(float)
+    sd = priors[[f"{p}_sd" for p in pnames]].to_numpy(float)
+    return sel, mean[roi], sd[roi], roi
 
 
-def fit_voxels(model, inp, frames, data4d, idx, m0, sd, w_roi, roi_names,
-               opts=VBOptions(), chunk_size=8192, dtype=jnp.float64, progress=None):
-    """VB for the voxels ``idx`` (flat indices into the 3D grid).
+def fit_voxels(model, inp, frames, Z, idx, shape3d, m0, sd, W2, roi,
+               opts=VBOptions(), chunk_size=8192, dtype=jnp.float64, progress=None,
+               prior_types=None, spatial_sweeps=5, spatial_eps=0.1, spatial_within_roi=False):
+    """VB for voxel TACs ``Z`` (V, T) at flat positions ``idx`` in ``shape3d``.
 
-    ``w_roi``: dict roi name -> frame weights (MATLAB: ROI TAC weights for all
-    voxels of the ROI).
+    ``W2`` (V, T) or (T,): inverse data variance (MATLAB: the ROI TAC weights
+    squared for all voxels of the ROI). ``roi`` (V,): region id, used by
+    ``spatial_within_roi``. ``prior_types``: one letter per parameter, ``R``
+    regional (default) or ``S`` regional + spatial MRF (see vb.spatial).
     """
-    X = np.asarray(data4d).reshape(-1, data4d.shape[-1])
-    Z = X[idx]
-    W2 = np.stack([np.asarray(w_roi[n]) ** 2 for n in roi_names])
     L0 = np.einsum("vi,ij->vij", 1.0 / sd**2, np.eye(model.n_params))
-    res = fit_vb(model, inp, frames, Z, W2, m0, L0, opts=opts, chunk_size=chunk_size,
-                 dtype=dtype, progress=progress)
+    kw = dict(opts=opts, chunk_size=chunk_size, dtype=dtype, progress=progress)
+    res = fit_vb(model, inp, frames, Z, W2, m0, L0, **kw)
+    if prior_types and "S" in prior_types.upper():
+        nb = neighbours(idx, shape3d, roi if spatial_within_roi else None)
+        res = fit_spatial(model, inp, frames, Z, W2, m0, sd, prior_types, nb, init=res,
+                          n_sweeps=spatial_sweeps, eps=spatial_eps, **kw)
     # derived parameters (delta method, autodiff gradients)
     for name, fn in model.derived.items():
         g = jax.jit(jax.vmap(jax.grad(fn)))
         v = jax.jit(jax.vmap(fn))
         vals, vars_ = [], []
-        for i0 in range(0, len(idx), chunk_size):
+        for i0 in range(0, len(Z), chunk_size):
             m = jnp.asarray(res["m"][i0:i0 + chunk_size])
             c = jnp.asarray(res["cov"][i0:i0 + chunk_size])
             gr = g(m)
@@ -57,6 +63,23 @@ def fit_voxels(model, inp, frames, data4d, idx, m0, sd, w_roi, roi_names,
 
 
 def to_volume(values, idx, shape3d, fill=np.nan):
+    """Scatter voxel values into a 3D volume; non-finite values become ``fill``."""
     out = np.full(int(np.prod(shape3d)), fill, dtype=np.float32)
-    out[idx] = values
+    v = np.asarray(values, np.float32)
+    out[idx] = np.where(np.isfinite(v), v, fill)
     return out.reshape(shape3d)
+
+
+QC_AT_BOUND, QC_MAX_ITER, QC_DERIVED_NONFINITE = 1, 2, 4
+
+
+def qc_flags(res, model, max_iter):
+    """Bitmask per voxel: 1 parameter at its lower bound, 2 iteration limit,
+    4 a derived parameter (VT/Ki/...) is not finite."""
+    lb = np.asarray(model.lower_bounds)
+    flags = np.zeros(len(res["m"]), np.int16)
+    flags[np.any(res["m"] <= lb + 1e-12, 1)] |= QC_AT_BOUND
+    flags[res["n_iter"] >= max_iter] |= QC_MAX_ITER
+    for name in model.derived:
+        flags[~np.isfinite(res[f"derived_{name}"])] |= QC_DERIVED_NONFINITE
+    return flags

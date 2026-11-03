@@ -1,0 +1,23 @@
+# Apptainer image built from the repository checkout (GPU: run with --nv)
+#   apptainer build vbpet.sif containers/vbpet.def      (from the repository root)
+#   apptainer run --nv -B /data vbpet.sif /data/bids /data/out participant --device gpu
+Bootstrap: docker
+From: python:3.11-slim
+
+%files
+    pyproject.toml /opt/vbpet/pyproject.toml
+    README.md /opt/vbpet/README.md
+    LICENSE /opt/vbpet/LICENSE
+    vbpet /opt/vbpet/vbpet
+
+%post
+    export PIP_NO_CACHE_DIR=1
+    pip install --upgrade pip
+    pip install "/opt/vbpet[cuda]"
+
+%runscript
+    exec vbpet "$@"
+
+%labels
+    Name vbpet
+    Description Variational Bayes parametric imaging of dynamic PET (BIDS App)

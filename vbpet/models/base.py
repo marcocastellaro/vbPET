@@ -36,6 +36,9 @@ class Model:
 
     ``derived`` maps names to scalar functions of theta (e.g. VT, Ki); their
     variance is obtained by the delta method with autodiff gradients.
+    ``lower``: per-parameter lower bound (None = 0 for all, as MATLAB vbPET);
+    ``prior_sd_min``: absolute floor of the regional prior sd per parameter
+    (needed for parameters whose value can be ~0, e.g. a delay).
     """
 
     name: str
@@ -45,6 +48,12 @@ class Model:
     derived: dict = field(default_factory=dict)
     fixed: dict = field(default_factory=dict)
     label: str = ""
+    lower: tuple = None
+    prior_sd_min: dict = field(default_factory=dict)
+
+    @property
+    def lower_bounds(self):
+        return tuple(0.0 for _ in self.param_names) if self.lower is None else self.lower
 
     @property
     def n_params(self):
@@ -68,10 +77,34 @@ class Model:
         fn = self.predict_fn
         derived = {k: (lambda t, f=f: f(expand(t))) for k, f in self.derived.items()}
         tag = ",".join(f"{k}={v:g}" for k, v in fixed.items())
+        lb = self.lower_bounds
         return Model(f"{self.name}", tuple(names[i] for i in free),
                      tuple(self.p0[i] for i in free),
                      lambda theta, inp, frames: fn(expand(theta), inp, frames), derived,
-                     fixed={**self.fixed, **fixed}, label=f"{self.name}[{tag}]")
+                     fixed={**self.fixed, **fixed}, label=f"{self.name}[{tag}]",
+                     lower=tuple(lb[i] for i in free), prior_sd_min=self.prior_sd_min)
+
+    def with_delay(self, lower=-1.0, prior_sd=0.1):
+        """Add a blood arrival delay ``delay`` (min, input shifted: C(t - delay)).
+
+        Needed for whole-body PET, where arrival differs along the body. The
+        lower bound allows negative delays down to ``lower`` minutes.
+        """
+        fn = self.predict_fn
+        P = self.n_params
+
+        def predict(theta, inp, frames):
+            d = theta[P]
+            tp = inp.tp
+            shifted = type(inp)(tp, jnp.interp(tp - d, tp, inp.Cp, left=0.0),
+                                jnp.interp(tp - d, tp, inp.Cb, left=0.0))
+            return fn(theta[:P], shifted, frames)
+
+        derived = {k: (lambda t, f=f: f(t[:P])) for k, f in self.derived.items()}
+        return Model(self.name, self.param_names + ("delay",), self.p0 + (0.0,), predict,
+                     derived, fixed=self.fixed, label=(self.label or self.name) + "+delay",
+                     lower=self.lower_bounds + (float(lower),),
+                     prior_sd_min={**self.prior_sd_min, "delay": float(prior_sd)})
 
     def derived_with_var(self, theta, cov):
         """Return {name: (value, variance)} for one parameter vector."""

@@ -21,6 +21,7 @@ from vbpet.vb.core import VBOptions, fit_vb, regional_prior  # noqa: E402
 
 n_mat = int(sys.argv[1]) if len(sys.argv) > 1 else 200
 n_jax = int(sys.argv[2]) if len(sys.argv) > 2 else 100_000
+devices = sys.argv[3].split(",") if len(sys.argv) > 3 else ["gpu", "cpu"]
 
 prob = make_problem("2TCM", n_vox=max(n_mat, 1), seed=1)
 m0, L0 = regional_prior(prob["p_true"], 0.5)
@@ -44,7 +45,7 @@ else:
 print(f"MATLAB : {n_mat} voxels in {t_mat:.1f} s -> {n_mat / t_mat:.1f} vox/s")
 
 big = make_problem("2TCM", n_vox=n_jax, seed=2)
-for dev in ["gpu", "cpu"]:
+for dev in devices:
     try:
         device = jax.devices(dev)[0]
     except RuntimeError:

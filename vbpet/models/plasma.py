@@ -28,6 +28,12 @@ def _integ(inp, a, conv):
     return a * exp_conv(inp.Cp, 0.0, dt, "linear")
 
 
+def _div(a, b):
+    """a / b with 0 where b == 0 (degenerate rate constants, e.g. k2 + k3 -> 0)."""
+    safe = jnp.where(b == 0, 1.0, b)
+    return jnp.where(b == 0, 0.0, a / safe)
+
+
 def _2tcm_rates(k2, k3, k4):
     s = k2 + k3 + k4
     d = jnp.sqrt(jnp.maximum(s**2 - 4 * k2 * k4, 0.0))
@@ -43,8 +49,8 @@ def predict_1tcm(theta, inp, frames, conv="rect", sampling="mid"):
 def predict_2tcm(theta, inp, frames, conv="rect", sampling="mid"):
     K1, k2, k3, k4, Vb = theta
     b1, b2 = _2tcm_rates(k2, k3, k4)
-    a1 = (1 - Vb) * K1 * (b1 - k3 - k4) / (b1 - b2)
-    a2 = (1 - Vb) * K1 * (k3 + k4 - b2) / (b1 - b2)
+    a1 = (1 - Vb) * K1 * _div(b1 - k3 - k4, b1 - b2)
+    a2 = (1 - Vb) * K1 * _div(k3 + k4 - b2, b1 - b2)
     YY = _expo(inp, a1, b1, conv) + _expo(inp, a2, b2, conv) + Vb * inp.Cb
     return _finish(YY, inp, frames, sampling)
 
@@ -63,8 +69,8 @@ def predict_2tcm1k(theta, inp, frames, conv="rect", sampling="mid"):
 def predict_irr2tcm(theta, inp, frames, conv="rect", sampling="mid"):
     K1, k2, k3, Vb = theta
     b1 = k2 + k3
-    a1 = (1 - Vb) * K1 * k2 / (k2 + k3)
-    a2 = (1 - Vb) * K1 * k3 / (k2 + k3)
+    a1 = (1 - Vb) * K1 * _div(k2, k2 + k3)
+    a2 = (1 - Vb) * K1 * _div(k3, k2 + k3)
     YY = _expo(inp, a1, b1, conv) + _integ(inp, a2, conv) + Vb * inp.Cb
     return _finish(YY, inp, frames, sampling)
 

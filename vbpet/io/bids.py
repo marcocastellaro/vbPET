@@ -234,3 +234,25 @@ def read_labels(dseg_path):
         name_col = "name" if "name" in df else df.columns[1]
         return dict(zip(df[idx_col].astype(int), df[name_col].astype(str)))
     return {}
+
+
+# --------------------------------------------------------------- 4D loading
+def load_masked(path, mask, scale=1.0, dtype=np.float32):
+    """Voxels inside ``mask`` of a 4D image, frame by frame -> (idx, X (V, T)).
+
+    Never holds the full 4D array in memory (total-body PET is tens of GB):
+    peak memory is one 3D frame + V*T values. Install ``indexed_gzip`` for fast
+    frame access in .nii.gz files.
+    """
+    img = nib.load(str(path), keep_file_open=True)
+    shape = img.shape
+    mask = np.asarray(mask, bool)
+    if mask.shape != shape[:3]:
+        raise ValueError(f"mask shape {mask.shape} != image {shape[:3]}")
+    idx = np.flatnonzero(mask.reshape(-1))
+    T = shape[3] if len(shape) > 3 else 1
+    X = np.empty((len(idx), T), dtype)
+    for t in range(T):
+        fr = np.asarray(img.dataobj[..., t], dtype=np.float32)
+        X[:, t] = fr.reshape(-1)[idx] * scale
+    return idx, X

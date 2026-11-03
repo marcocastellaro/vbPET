@@ -17,6 +17,7 @@ dependencies = [
     "nibabel",
     "pandas",
     "pybids>=0.16",
+    "indexed_gzip",  # fast frame access in large .nii.gz (whole-body)
 ]
 
 [project.optional-dependencies]

@@ -36,6 +36,22 @@ default, or taken at mid-frame as in the MATLAB code and kinfitr/petfit),
 `--convolution linear|rect`, `--input-step`; `--matlab-compat` sets all three to
 the MATLAB behaviour.
 
+Main options:
+
+| Option | Purpose |
+|---|---|
+| `--model` | plasma input: `1TCM 2TCM 2TCM1K irr2TCM 1K 5K`; reference region: `SRTM SRTM2` |
+| `--ref-label`, `--k2p` | reference region (dseg label names/indices); SRTM2 k2' (default: from regional SRTM) |
+| `--idif-label`, `--idif-plasma-ratio` | image-derived input from a blood-pool label (aorta, LV) |
+| `--fit-delay`, `--blood-shift` | estimate / impose a blood arrival delay (whole-body PET) |
+| `--fix Vb=0.05` | hold parameters fixed |
+| `--prior-types RRRSR` | per parameter: `R` regional prior, `S` regional + spatial MRF prior |
+| `--prior-lambda` | regional prior sd = lambda x regional estimate (default 0.5, as MATLAB) |
+| `--device gpu --precision float64` | GPU (float64 is recommended) |
+
+Outputs include a `meas-QCFlags` map (1 parameter at bound, 2 iteration limit,
+4 derived parameter not finite).
+
 Stage 1 fits the regional TACs of a PET-space segmentation (WNLLS) and builds
 region-based priors; stage 2 runs voxel-wise VB with those priors. Outputs are
 BIDS derivatives (`*_kinpar.tsv`, `*_tacs.tsv`, `*_model-<M>_meas-<p>_mimap.nii.gz`).

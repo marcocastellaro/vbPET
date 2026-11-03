@@ -5,7 +5,18 @@ Python/JAX re-implementation of the vbPET Variational Bayes estimator
 a region-based prior pre-step and optional spatial priors. Target: brain **and
 whole-body / total-body** dynamic PET.
 
-Status: draft, 2026-11-03.
+Status (2026-11-03): M1-M4 implemented; M5 partly (delay, IDIF, masked
+frame-wise loading); M6 container files written, not yet built.
+
+| Milestone | State |
+|---|---|
+| M1 core (models, conv, batched VB) | done; 12 MATLAB comparison tests pass |
+| M2 BIDS I/O, regional stage, voxel stage, CLI | done; ds004869 sub-01 end-to-end on DEI A40 |
+| M3 SRTM / SRTM2 | done (unit + app tests) |
+| M4 spatial prior (`--prior-types`, type S) | done (unit test on a smooth field) |
+| M5 whole-body | `--fit-delay`, `--idif-label`, masked loading done; synthetic total-body phantom to do |
+| M6 containers | Dockerfile, Dockerfile.cuda, Apptainer def written |
+
 
 ---
 

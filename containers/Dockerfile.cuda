@@ -1,0 +1,12 @@
+# vbPET BIDS App, GPU image (CUDA 12 libraries come with the jax[cuda12] wheels;
+# only the NVIDIA driver is needed on the host)
+#   docker build -f containers/Dockerfile.cuda -t vbpet:cuda .
+#   docker run --rm --gpus all -v /data/bids:/bids:ro -v /data/out:/out vbpet:cuda \
+#          /bids /out participant --device gpu ...
+FROM python:3.11-slim
+ENV PIP_NO_CACHE_DIR=1 PYTHONDONTWRITEBYTECODE=1
+WORKDIR /opt/vbpet
+COPY pyproject.toml README.md LICENSE ./
+COPY vbpet ./vbpet
+RUN pip install --upgrade pip && pip install ".[cuda]"
+ENTRYPOINT ["vbpet"]

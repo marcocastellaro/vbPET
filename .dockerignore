@@ -1,0 +1,8 @@
+.git
+env
+testdata
+jobs
+tests/fixtures
+third_party/vbPET_matlab
+**/__pycache__
+*.egg-info
